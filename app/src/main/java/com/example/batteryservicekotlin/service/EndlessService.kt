@@ -1,24 +1,30 @@
-package com.example.batteryservicekotlin
+package com.example.batteryservicekotlin.service
 
 import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
-import android.os.IBinder
-import android.os.PowerManager
-import android.os.SystemClock
+import android.os.*
 import android.util.Log
 import android.widget.Toast
+import com.example.batteryservicekotlin.BatteryRepository
+import com.example.batteryservicekotlin.MainActivity
+import com.example.batteryservicekotlin.R
+import com.example.batteryservicekotlin.database.Unit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.*
+
+private const val TAG = "MyTag"
 
 class EndlessService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
+
+    private val batteryRepository = BatteryRepository.get()
 
     override fun onBind(intent: Intent): IBinder? {
         log("Some component want to bind with the service")
@@ -47,25 +53,25 @@ class EndlessService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        log("The service has been created".toUpperCase())
+        log("The service has been created".uppercase(Locale.getDefault()))
         val notification = createNotification()
         startForeground(1, notification)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        log("The service has been destroyed".toUpperCase())
+        log("The service has been destroyed".uppercase(Locale.getDefault()))
         Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
         val restartServiceIntent = Intent(applicationContext, EndlessService::class.java).also {
             it.setPackage(packageName)
-        };
-        val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
-        applicationContext.getSystemService(Context.ALARM_SERVICE);
-        val alarmService: AlarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager;
-        alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent);
+        }
+        val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT)
+        applicationContext.getSystemService(Context.ALARM_SERVICE)
+        val alarmService: AlarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent)
     }
 
     private fun startService() {
@@ -88,12 +94,25 @@ class EndlessService : Service() {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
                     //pingFakeServer()
-                    Log.d("MyTag", "Done")
+                    Log.d(TAG, "Capacity: ${getBatteryCapacity()}")
+                    addUnit()
                 }
                 delay(5000)
             }
             log("End of the loop for the service")
         }
+    }
+
+    // Емкость батареи
+    private fun getBatteryCapacity(): Int {
+        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+    }
+
+    private fun addUnit() {
+        val unit = Unit()
+        unit.capacity = getBatteryCapacity()
+        batteryRepository.addUnit(unit)
     }
 
     private fun stopService() {

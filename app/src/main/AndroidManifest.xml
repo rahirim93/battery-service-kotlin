@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
+        android:name=".BatteryServiceApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -16,7 +17,7 @@
         android:theme="@style/Theme.BatteryServiceKotlin">
 
         <service
-            android:name=".EndlessService"
+            android:name=".service.EndlessService"
             android:enabled="true"
             android:exported="false">
         </service>
@@ -31,7 +32,7 @@
         </activity>
 
         <receiver
-            android:name=".StartReceiver"
+            android:name=".service.StartReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>

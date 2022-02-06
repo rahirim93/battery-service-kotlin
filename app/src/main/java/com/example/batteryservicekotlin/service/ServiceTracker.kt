@@ -1,4 +1,4 @@
-package com.example.batteryservicekotlin
+package com.example.batteryservicekotlin.service
 
 import android.content.Context
 import android.content.SharedPreferences

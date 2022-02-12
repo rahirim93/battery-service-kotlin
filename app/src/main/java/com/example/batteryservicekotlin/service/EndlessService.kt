@@ -8,7 +8,7 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import com.example.batteryservicekotlin.BatteryRepository
-import com.example.batteryservicekotlin.MainActivity
+import com.example.batteryservicekotlin.MainActivity2
 import com.example.batteryservicekotlin.R
 import com.example.batteryservicekotlin.database.Unit
 import kotlinx.coroutines.Dispatchers
@@ -184,7 +184,7 @@ class EndlessService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val pendingIntent: PendingIntent = Intent(this, MainActivity::class.java).let { notificationIntent ->
+        val pendingIntent: PendingIntent = Intent(this, MainActivity2::class.java).let { notificationIntent ->
             PendingIntent.getActivity(this, 0, notificationIntent, 0)
         }
 

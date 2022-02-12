@@ -10,54 +10,59 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/textView1"
+        app:layout_constraintBottom_toTopOf="@+id/textViewInsertsTotal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textViewInsertsTotal"
+        tools:text="Количество записей в БД"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView1"
-        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        android:text="Количество записей в БД"
+        app:layout_constraintBottom_toTopOf="@+id/textViewInsertsToday"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/textViewInsertsToday"
+        tools:text="Количетво записей сегодня"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView2"
-        app:layout_constraintBottom_toTopOf="@+id/textView3"
+        android:text="Количетво записей сегодня"
+        app:layout_constraintBottom_toTopOf="@+id/textViewInsertsMustBeToday"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/textViewInsertsMustBeToday"
+        tools:text="Количество записей должно быть"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView3"
-        app:layout_constraintBottom_toTopOf="@+id/textView4"
+        android:text="Количество записей должно быть"
+        app:layout_constraintBottom_toTopOf="@+id/textViewInsertsDifference"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 
     <TextView
-        android:id="@+id/textView4"
+        android:id="@+id/textViewInsertsDifference"
+        tools:text="Разница"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView4"
+        android:text="Разница"
         app:layout_constraintBottom_toTopOf="@+id/textView5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 
     <TextView
+        tools:text="Пока не используется"
         android:id="@+id/textView5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView5"
+        android:text="Пока не используется"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.example.batteryservicekotlin.database.BatteryDatabase
 import com.example.batteryservicekotlin.database.Unit
 import java.lang.IllegalStateException
+import java.util.*
 import java.util.concurrent.Executors
 
 private const val DATABASE_NAME = "battery_database"
@@ -23,6 +24,8 @@ class BatteryRepository private constructor(context: Context) {
     private val executor = Executors.newSingleThreadExecutor()
 
     fun getUnits(): LiveData<List<Unit>> = batteryDao.getUnits()
+
+    fun getDates(): LiveData<List<Date>> = batteryDao.getDates()
 
     // Выборка данных в выбранный день
     fun getChosenDayUnits(startDay: Int, endDay: Int): LiveData<List<Unit>> = batteryDao.getChosenDayUnits(startDay, endDay)

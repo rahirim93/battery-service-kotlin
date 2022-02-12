@@ -11,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.batteryservicekotlin.service.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 import com.example.batteryservicekotlin.database.Unit as Unit
 
@@ -21,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textView: TextView
     private lateinit var textView2: TextView
     private lateinit var textView3: TextView
+    private lateinit var buttonPrintDates: Button
 
     private val mainActivityViewModel: MainViewModel by lazy {
         ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -33,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         textView = findViewById(R.id.textView)
         textView2 = findViewById(R.id.textView2)
         textView3 = findViewById(R.id.textView3)
+        buttonPrintDates = findViewById(R.id.buttonPrintDates)
 
         title = "Endless Service"
 
@@ -50,12 +55,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        buttonPrintDates.setOnClickListener {
+            var list = mainActivityViewModel.listDatesLiveData.value
+            var listFiltered = arrayListOf<Date>()
+            list?.forEach { date ->
+                if (listFiltered.isEmpty()) listFiltered.add(date)
+                var listFilteredIterator = listFiltered.listIterator()
+                var inputDate: Date? = null
+                while (listFilteredIterator.hasNext()) {
+                    val tempNextDate = listFilteredIterator.next()
+                    if (tempNextDate.date != date.date) {
+                        inputDate = date
+                    } else {
+                        inputDate = null
+                    }
+                }
+                if (inputDate != null) listFilteredIterator.add(inputDate)
+            }
+            Log.d(TAG, "Mutable list size is ${listFiltered.size}")
+            listFiltered.forEach {
+                println(it)
+            }
+            GlobalScope.launch(Dispatchers.IO) {
+                launch(Dispatchers.IO) {
+                }
+            }
+        }
+
         // Observer, который следит за постоянно изменящимся размером БД
         // и обновляет TextView
         val batteryObserver = Observer<List<Unit>> { units ->
             updateUI(units)
         }
         mainActivityViewModel.unitListLiveData.observe(this, batteryObserver)
+
+        // Observer, который следит
+        val batteryDatesObserver = Observer<List<Date>> { dates ->
+
+        }
+        mainActivityViewModel.listDatesLiveData.observe(this, batteryDatesObserver)
     }
 
     private fun updateUI(units: List<Unit>) {
@@ -94,15 +132,6 @@ class MainActivity : AppCompatActivity() {
         // моменту сегодня с интревалом записи 5 секунд
         val countUnitMustBe = (calendarInMillis - startDayInMillis) / 5000  // Разница между началом дня и текущим моментом на интервал 5 сек
         textView3.text = "Size must be today $countUnitMustBe"              // Вывод в TextView
-
-        // Вывод в лог состояния приложения, применена ли к нему оптимизация батареи
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-        val isIgnoring = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            powerManager.isIgnoringBatteryOptimizations("com.example.batteryservicekotlin")
-        } else {
-            TODO("VERSION.SDK_INT < M")
-        }
-        Log.d(TAG, "Is ignoring is $isIgnoring")
     }
 
     private fun actionOnService(action: Actions) {

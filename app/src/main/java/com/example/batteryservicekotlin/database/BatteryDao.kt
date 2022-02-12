@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import java.util.*
 
 @Dao
 interface BatteryDao {
@@ -15,6 +16,9 @@ interface BatteryDao {
     //startDay - начало дня, endDay - конец дня
     @Query("SELECT * FROM unit WHERE date BETWEEN :startDay AND :endDay")
     fun getChosenDayUnits(startDay: Int, endDay: Int): LiveData<List<Unit>>
+
+    @Query("SELECT date FROM unit")
+    fun getDates(): LiveData<List<Date>>
 
     @Insert
     fun addUnit(unit: Unit)

@@ -1,7 +1,7 @@
 package com.example.batteryservicekotlin.listFragment
 
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +12,18 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.batteryservicekotlin.MainViewModel
 import com.example.batteryservicekotlin.R
 import com.example.batteryservicekotlin.database.Unit
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import com.example.batteryservicekotlin.service.Actions
 import java.util.*
-import java.util.Arrays.asList
 
 private const val TAG = "ListFragment"
 
 class ListFragment : Fragment() {
+
+    interface Callbacks {
+        fun startStopService(action: Actions)
+    }
 
     private val listViewModel: ListViewModel by lazy {
         ViewModelProviders.of(this).get(ListViewModel::class.java)
@@ -31,12 +32,18 @@ class ListFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private var adapter: ListAdapter? = null
 
+    private var callbacks: Callbacks? = null
     private lateinit var textViewInsertsTotal: TextView
     private lateinit var textViewInsertsToday: TextView
     private lateinit var textViewInsertsMustBeToday: TextView
     private lateinit var textViewInsertsDifference: TextView
     private lateinit var buttonStartService: Button
     private lateinit var buttonStopService: Button
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callbacks = context as Callbacks?
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,14 +80,19 @@ class ListFragment : Fragment() {
         buttonStopService = view.findViewById(R.id.buttonStopService) as Button
 
         buttonStartService.setOnClickListener {
-
+            callbacks?.startStopService(Actions.START)
         }
 
         buttonStopService.setOnClickListener {
-
+            callbacks?.startStopService(Actions.STOP)
         }
 
         return view
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        callbacks = null
     }
 
     private fun updateUI(dates: List<Date>) {
@@ -89,10 +101,25 @@ class ListFragment : Fragment() {
         recyclerView.adapter = adapter
     }
 
-    private inner class ItemHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private inner class ItemHolder(view: View)
+        : RecyclerView.ViewHolder(view), View.OnClickListener {
 
-        val dateTextView: TextView = itemView.findViewById(R.id.textViewItemDate)
+        private lateinit var date: Date
 
+        private val dateTextView: TextView = itemView.findViewById(R.id.textViewItemDate)
+
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        fun bind(date: Date) {
+            this.date = date
+            dateTextView.text = this.date.toString()
+        }
+
+        override fun onClick(p0: View?) {
+
+        }
     }
 
     private inner class ListAdapter(var dates: List<Date>)
@@ -106,9 +133,7 @@ class ListFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ItemHolder, position: Int) {
             val date = dates[position]
-            holder.apply {
-                dateTextView.text = date.toString()
-            }
+            holder.bind(date)
         }
 
         override fun getItemCount() = dates.size
@@ -140,6 +165,5 @@ class ListFragment : Fragment() {
 
         val list: List<Date> = listFiltered
         return list
-
     }
 }

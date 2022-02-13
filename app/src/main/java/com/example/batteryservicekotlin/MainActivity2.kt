@@ -7,13 +7,14 @@ import android.os.Bundle
 import com.example.batteryservicekotlin.listFragment.ListFragment
 import com.example.batteryservicekotlin.service.*
 
-class MainActivity2 : AppCompatActivity() {
+class MainActivity2 : AppCompatActivity(), ListFragment.Callbacks {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
-        actionOnService(Actions.START)
+        // Запуск службы при запуске приложения
+        //actionOnService(Actions.START)
 
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 
@@ -24,6 +25,10 @@ class MainActivity2 : AppCompatActivity() {
                 .add(R.id.fragment_container, fragment)
                 .commit()
         }
+    }
+
+    override fun startStopService(action: Actions) {
+        actionOnService(action)
     }
 
     private fun actionOnService(action: Actions) {

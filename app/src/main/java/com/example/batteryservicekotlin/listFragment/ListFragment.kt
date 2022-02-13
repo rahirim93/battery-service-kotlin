@@ -29,6 +29,7 @@ class ListFragment : Fragment() {
         ViewModelProviders.of(this).get(ListViewModel::class.java)
     }
 
+
     private lateinit var recyclerView: RecyclerView
     private var adapter: ListAdapter? = null
 
@@ -147,23 +148,59 @@ class ListFragment : Fragment() {
     }
 
     private fun filterDate(list: List<Date>): List<Date> {
-        var listFiltered = arrayListOf<Date>()
+        val listFiltered = arrayListOf<Date>()
         list.forEach { date ->
             if (listFiltered.isEmpty()) listFiltered.add(date)
-            var listFilteredIterator = listFiltered.listIterator()
+            val listFilteredIterator = listFiltered.listIterator()
             var inputDate: Date? = null
             while (listFilteredIterator.hasNext()) {
                 val tempNextDate = listFilteredIterator.next()
-                if (tempNextDate.date != date.date) {
-                    inputDate = date
+                inputDate = if (tempNextDate.date != date.date) {
+                    date
                 } else {
-                    inputDate = null
+                    null
                 }
             }
             if (inputDate != null) listFilteredIterator.add(inputDate)
         }
-
-        val list: List<Date> = listFiltered
-        return list
+        return listFiltered
     }
+
+    //    private fun updateUI(units: List<Unit>) {
+//        textView.text = "Size is ${units.size}"
+//
+//        // Текущая дата и время
+//        val calendar = Calendar.getInstance()
+//        // Начало дня текущей даты
+//        val startDay = GregorianCalendar(
+//            calendar.get(Calendar.YEAR),
+//            calendar.get(Calendar.MONTH),
+//            calendar.get(Calendar.DAY_OF_MONTH),
+//            0, 0, 0)
+//        // Конец дня текущей даты
+//        val endDay = GregorianCalendar(
+//            calendar.get(Calendar.YEAR),
+//            calendar.get(Calendar.MONTH),
+//            calendar.get(Calendar.DAY_OF_MONTH),
+//            23, 59, 59)
+//        // Даты в миллисекундах
+//        val calendarInMillis = calendar.timeInMillis
+//        val startDayInMillis = startDay.timeInMillis
+//        val endDayInMillis = endDay.timeInMillis
+//        // Вывод количества записей в БД сегодня
+//        var list = arrayListOf<Unit>() // Пустой изменяемый лист, для хранения выборки сегодняшнего дня
+//        // Перебираем всю БД на выбранный диапазон
+//        // в данном случае с начала дня до текущего момента
+//        units.forEach { unit ->
+//            if (unit.date.time in (startDayInMillis + 1) until calendarInMillis) {
+//                list.add(unit)
+//            }
+//        }
+//        textView2.text = "Size today is ${list.size}" // Выводим в TextView
+//
+//        // Вывод количества записей, которое должно быть сделано к текущему
+//        // моменту сегодня с интревалом записи 5 секунд
+//        val countUnitMustBe = (calendarInMillis - startDayInMillis) / 5000  // Разница между началом дня и текущим моментом на интервал 5 сек
+//        textView3.text = "Size must be today $countUnitMustBe"              // Вывод в TextView
+//    }
 }

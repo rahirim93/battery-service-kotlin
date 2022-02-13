@@ -12,6 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.batteryservicekotlin.BatteryBundleForAdapter
 import com.example.batteryservicekotlin.R
 import com.example.batteryservicekotlin.database.Unit
 import com.example.batteryservicekotlin.service.Actions
@@ -52,6 +53,58 @@ class ListFragment : Fragment() {
         //Наблюдатель за общим количеством записей в БД
         val batteryObserver = Observer<List<Unit>> { units ->
 
+            val listFiltered = arrayListOf<Date>()
+            units.forEach { unit ->
+                if (listFiltered.isEmpty()) listFiltered.add(unit.date)
+                val listFilteredIterator = listFiltered.listIterator()
+                var inputDate: Date? = null
+                while (listFilteredIterator.hasNext()) {
+                    val tempNextDate = listFilteredIterator.next()
+                    inputDate = if (tempNextDate.date != unit.date.date) {
+                        unit.date
+                    } else {
+                        null
+                    }
+                }
+                if (inputDate != null) listFilteredIterator.add(inputDate)
+            }
+            // Список с отфильтрованными датами
+            var listDates = listFiltered
+
+
+            // Дальше перебираем список с отфильтрованными датами
+            // и для каждой даты вычисляем количество записей в эту дату
+            // создавая при том список с количеством записей
+            // Лист отфильтрованных списков
+            var listSetFilteredInserts = arrayListOf<List<Unit>>()
+            listDates.forEach { date ->
+                //Начало дня перебираемой даты
+                val startDayDate = Date(date.year,date.month,date.date,0,0,0)
+                //Конец дня перебираемой даты
+                val endDayDate = Date(date.year,date.month,date.date,23,59,59)
+                // Даты в миллисекундах
+                val startDayInMillis = startDayDate.time
+                val endDayInMillis = endDayDate.time
+                // Временный пустой лист для заполнения отфильтровнными записями в перебираемый день
+                var listFilteredInserts = arrayListOf<Unit>()
+
+                units.forEach {
+                    if (it.date.time in (startDayInMillis + 1) until endDayInMillis) {
+                        listFilteredInserts.add(it)
+                    }
+                }
+                listSetFilteredInserts.add(listFilteredInserts)
+            }
+            // Список объектов для адаптера
+            var listOfBatteryBundles = arrayListOf<BatteryBundleForAdapter>()
+            for (i in listDates.indices) {
+                listOfBatteryBundles.add(
+                    BatteryBundleForAdapter(listDates[i], listSetFilteredInserts[i])
+                )
+            }
+
+            adapter = ListAdapter(listOfBatteryBundles)
+            recyclerView.adapter = adapter
 
             //Log.d(TAG, "Количество записей: ${units.size}")
             textViewInsertsTotal.text = "Количество записей в БД: ${units.size}"
@@ -68,7 +121,7 @@ class ListFragment : Fragment() {
         listViewModel.unitListLiveData.observe(this, batteryObserver)
 
         val datesObserver = Observer<List<Date>> { dates ->
-            updateUI(dates)
+            //updateUI(dates)
         }
         listViewModel.listDatesLiveData.observe(this, datesObserver)
     }
@@ -108,25 +161,27 @@ class ListFragment : Fragment() {
     }
 
     private fun updateUI(dates: List<Date>) {
-        val filteredDates = filterDate(dates)
-        adapter = ListAdapter(filteredDates)
-        recyclerView.adapter = adapter
+        //val filteredDates = filterDate(dates)
+        //adapter = ListAdapter(filteredDates)
+        //recyclerView.adapter = adapter
     }
 
     private inner class ItemHolder(view: View)
         : RecyclerView.ViewHolder(view), View.OnClickListener {
 
-        private lateinit var date: Date
+        private lateinit var batteryBundle: BatteryBundleForAdapter
 
         private val dateTextView: TextView = itemView.findViewById(R.id.textViewItemDate)
+        private val insertsNumberTextView: TextView = itemView.findViewById(R.id.textViewItemNumberToday)
 
         init {
             itemView.setOnClickListener(this)
         }
 
-        fun bind(date: Date) {
-            this.date = date
-            dateTextView.text = this.date.toString()
+        fun bind(batteryBundle: BatteryBundleForAdapter) {
+            this.batteryBundle = batteryBundle
+            dateTextView.text = this.batteryBundle.date.toString()
+            insertsNumberTextView.text = "Количество записей: ${this.batteryBundle.insertsDay.size} из 17280"
         }
 
         override fun onClick(p0: View?) {
@@ -134,7 +189,7 @@ class ListFragment : Fragment() {
         }
     }
 
-    private inner class ListAdapter(var dates: List<Date>)
+    private inner class ListAdapter(var batteryBundles: List<BatteryBundleForAdapter>)
         : RecyclerView.Adapter<ItemHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
@@ -144,11 +199,11 @@ class ListFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ItemHolder, position: Int) {
-            val date = dates[position]
-            holder.bind(date)
+            val batteryBundle = batteryBundles[position]
+            holder.bind(batteryBundle)
         }
 
-        override fun getItemCount() = dates.size
+        override fun getItemCount() = batteryBundles.size
 
     }
 

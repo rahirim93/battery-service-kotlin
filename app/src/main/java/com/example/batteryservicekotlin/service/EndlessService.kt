@@ -3,6 +3,7 @@ package com.example.batteryservicekotlin.service
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.*
 import android.util.Log
@@ -93,8 +94,6 @@ class EndlessService : Service() {
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
-                    //pingFakeServer()
-                    Log.d(TAG, "Capacity: ${getBatteryCapacity()}")
                     addUnit()
                 }
                 delay(5000)
@@ -103,15 +102,47 @@ class EndlessService : Service() {
         }
     }
 
-    // Емкость батареи
-    private fun getBatteryCapacity(): Int {
-        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
-        return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
-    }
-
+    // Функция добавления ТМИ в БД
     private fun addUnit() {
-        val unit = Unit()
-        unit.capacity = getBatteryCapacity()
+
+        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+
+        //Оставшаяся емкость аккумулятора в виде целого процента от общей емкости (без дробной части).
+        val capacityInPercentage = batteryManager
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        Log.d(TAG, "Capacity: $capacityInPercentage") // Чтобы видеть при закрытом приложении в логе что ТМИ пишется
+
+        // Емкость аккумулятора в микроампер-часах, как целое число.
+        val capacityInMicroampereHours = batteryManager
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+
+        // Средний ток батареи в микроамперах, как целое число.
+        val currentAverage = batteryManager
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
+
+        // Мгновенный ток батареи в микроамперах, как целое число.
+        val currentNow = batteryManager
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = registerReceiver(null, intentFilter)
+
+        // Дополнительно за намерение.ACTION_BATTERY_CHANGED: целое число, содержащее текущую температуру батареи.
+        val temperature = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+
+        // Дополнительно за намерение.ACTION_BATTERY_CHANGED: целое число, содержащее текущий уровень напряжения батареи.
+        val voltage = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+
+        // Заполнение объекта сущности ТМИ
+        var unit = Unit()
+        unit.capacityInMicroampereHours = capacityInMicroampereHours
+        unit.capacityInPercentage = capacityInPercentage
+        unit.currentAverage = currentAverage
+        unit.currentNow = currentNow
+        unit.temperature = temperature
+        unit.voltage = voltage
+
+        // Добавление ТМИ в БД
         batteryRepository.addUnit(unit)
     }
 
@@ -132,35 +163,6 @@ class EndlessService : Service() {
         isServiceStarted = false
         setServiceState(this, ServiceState.STOPPED)
     }
-
-//    private fun pingFakeServer() {
-//        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.mmmZ")
-//        val gmtTime = df.format(Date())
-//
-//        val deviceId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
-//
-//        val json =
-//            """
-//                {
-//                    "deviceId": "$deviceId",
-//                    "createdAt": "$gmtTime"
-//                }
-//            """
-//        try {
-//            Fuel.post("https://jsonplaceholder.typicode.com/posts")
-//                .jsonBody(json)
-//                .response { _, _, result ->
-//                    val (bytes, error) = result
-//                    if (bytes != null) {
-//                        log("[response bytes] ${String(bytes)}")
-//                    } else {
-//                        log("[response error] ${error?.message}")
-//                    }
-//                }
-//        } catch (e: Exception) {
-//            log("Error making the request: ${e.message}")
-//        }
-//    }
 
     private fun createNotification(): Notification {
         val notificationChannelId = "ENDLESS SERVICE CHANNEL"

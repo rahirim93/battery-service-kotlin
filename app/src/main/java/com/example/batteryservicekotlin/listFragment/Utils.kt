@@ -147,6 +147,7 @@ private fun getBatteryInfo(context: Context) {
     // Вычмсляет приблизительное время (в миллисекундах), оставшееся до полной зарядки аккумулятора.
     val chargeTimeRemaining = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         batteryManager.computeChargeTimeRemaining() / 1000
+        batteryManager.computeChargeTimeRemaining() // В миллисекундах
     } else {
         TODO("VERSION.SDK_INT < P")
     }

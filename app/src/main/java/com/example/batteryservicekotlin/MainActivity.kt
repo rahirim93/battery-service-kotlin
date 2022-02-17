@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity(), ListFragment.Callbacks {
         setContentView(R.layout.activity_main2)
 
         // Запуск службы при запуске приложения
-        actionOnService(Actions.START)
+        //actionOnService(Actions.START)
 
         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
 

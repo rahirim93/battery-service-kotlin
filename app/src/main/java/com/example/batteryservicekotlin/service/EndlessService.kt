@@ -8,10 +8,14 @@ import android.graphics.Color
 import android.os.*
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
+import androidx.lifecycle.ViewModelProviders
 import com.example.batteryservicekotlin.BatteryRepository
 import com.example.batteryservicekotlin.MainActivity
 import com.example.batteryservicekotlin.R
 import com.example.batteryservicekotlin.database.Unit
+import com.example.batteryservicekotlin.listFragment.ListViewModel
+import com.example.batteryservicekotlin.listFragment.getMustNumberInsertsToday
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -21,6 +25,11 @@ import java.util.*
 private const val TAG = "MyTag"
 
 class EndlessService : Service() {
+
+
+    var counter = 5
+    private lateinit var builder: Notification.Builder
+    private lateinit var notificationManager: NotificationManager
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var isServiceStarted = false
@@ -55,7 +64,8 @@ class EndlessService : Service() {
     override fun onCreate() {
         super.onCreate()
         log("The service has been created".uppercase(Locale.getDefault()))
-        val notification = createNotification()
+        builder = createNotification()
+        val notification = createNotification().build()
         startForeground(1, notification)
     }
 
@@ -95,11 +105,31 @@ class EndlessService : Service() {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
                     addUnit()
+                    updateNotification()
                 }
                 delay(5000)
             }
             log("End of the loop for the service")
         }
+    }
+
+    private fun updateNotification(){
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = registerReceiver(null, intentFilter)
+        val voltage = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        val currentNow = batteryManager
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+        if (counter == 1) {
+            counter = 0
+        } else {
+            counter = 1
+        }
+        val size = BatteryRepository.get().getUnits().value?.size
+        val string = "Мгновенный ток: ${currentNow} мкА \n" +
+                "Признак работы: $counter"
+        builder.style = Notification.BigTextStyle().bigText(string)
+        notificationManager.notify(1, builder.build())
     }
 
     // Функция добавления ТМИ в БД
@@ -164,13 +194,13 @@ class EndlessService : Service() {
         setServiceState(this, ServiceState.STOPPED)
     }
 
-    private fun createNotification(): Notification {
+    private fun createNotification(): Notification.Builder {
         val notificationChannelId = "ENDLESS SERVICE CHANNEL"
 
         // depending on the Android API that we're dealing with we will have
         // to use a specific method to create the notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                 notificationChannelId,
                 "Endless Service notifications channel",
@@ -202,6 +232,5 @@ class EndlessService : Service() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setTicker("Ticker text")
             .setPriority(Notification.PRIORITY_HIGH) // for under android 26 compatibility
-            .build()
     }
 }

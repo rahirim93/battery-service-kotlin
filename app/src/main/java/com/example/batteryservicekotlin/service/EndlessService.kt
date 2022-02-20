@@ -102,7 +102,7 @@ class EndlessService : Service() {
 
         // we're starting a loop in a coroutine
         GlobalScope.launch(Dispatchers.IO) {
-            while (isServiceStarted) {
+            while (true) {
                 launch(Dispatchers.IO) {
                     addUnit()
                     updateNotification()
@@ -117,6 +117,7 @@ class EndlessService : Service() {
         val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val batteryStatus = registerReceiver(null, intentFilter)
         val voltage = batteryStatus?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
+        val temperature = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
         val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
         val currentNow = batteryManager
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
@@ -127,6 +128,8 @@ class EndlessService : Service() {
         }
         val size = BatteryRepository.get().getUnits().value?.size
         val string = "Мгновенный ток: ${currentNow} мкА \n" +
+                "Напряжение: ${(voltage?.div(1000.0))} В \n" +
+                "Температура: ${temperature?.div(10.0)} \u2103 \n"+
                 "Признак работы: $counter"
         builder.style = Notification.BigTextStyle().bigText(string)
         notificationManager.notify(1, builder.build())

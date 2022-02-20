@@ -26,8 +26,10 @@ private const val TAG = "MyTag"
 
 class EndlessService : Service() {
 
+    // Счетчик времени работы сервиса без запуска приложения
+    private var counterTimeWork: Double = 0.0
 
-    var counter = 5
+    private var counter = 5
     private lateinit var builder: Notification.Builder
     private lateinit var notificationManager: NotificationManager
 
@@ -86,6 +88,7 @@ class EndlessService : Service() {
     }
 
     private fun startService() {
+        counterTimeWork = 0.0
         if (isServiceStarted) return
         log("Starting the foreground service task")
         Toast.makeText(this, "Service starting its task", Toast.LENGTH_SHORT).show()
@@ -106,6 +109,7 @@ class EndlessService : Service() {
                 launch(Dispatchers.IO) {
                     addUnit()
                     updateNotification()
+                    counterTimeWork += 5
                 }
                 delay(5000)
             }
@@ -129,8 +133,9 @@ class EndlessService : Service() {
         val size = BatteryRepository.get().getUnits().value?.size
         val string = "Мгновенный ток: ${currentNow} мкА \n" +
                 "Напряжение: ${(voltage?.div(1000.0))} В \n" +
-                "Температура: ${temperature?.div(10.0)} \u2103 \n"+
-                "Признак работы: $counter"
+                "Температура: ${temperature?.div(10.0)} \u2103 \n" +
+                "Признак работы: $counter \n" +
+                "Автономное время работы: ${String.format("%.3f", counterTimeWork / 3600.0)} ч"
         builder.style = Notification.BigTextStyle().bigText(string)
         notificationManager.notify(1, builder.build())
     }

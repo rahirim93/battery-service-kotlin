@@ -75,6 +75,8 @@ class EndlessService : Service() {
         super.onDestroy()
         log("The service has been destroyed".uppercase(Locale.getDefault()))
         Toast.makeText(this, "Service destroyed", Toast.LENGTH_SHORT).show()
+        builder.setContentText("Service was destroyed")
+        notificationManager.notify(1, builder.build())
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
@@ -105,7 +107,7 @@ class EndlessService : Service() {
 
         // we're starting a loop in a coroutine
         GlobalScope.launch(Dispatchers.IO) {
-            while (true) {
+            while (isServiceStarted) {
                 launch(Dispatchers.IO) {
                     addUnit()
                     updateNotification()

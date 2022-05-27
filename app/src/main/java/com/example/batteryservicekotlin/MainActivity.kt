@@ -2,33 +2,25 @@ package com.example.batteryservicekotlin
 
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.batteryservicekotlin.listFragment.ListFragment
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import com.example.batteryservicekotlin.service.*
 
-class MainActivity : AppCompatActivity(), ListFragment.Callbacks {
+class MainActivity : AppCompatActivity() {
+    //Кнопки запуска и остановки сервиса
+    private lateinit var startButton: Button
+    private lateinit var stopButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main2)
+        setContentView(R.layout.activity_main)
+
+        init()
 
         // Запуск службы при запуске приложения
         //actionOnService(Actions.START)
 
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
-
-        if (currentFragment == null) {
-            val fragment = ListFragment.newInstance()
-            supportFragmentManager
-                .beginTransaction()
-                .add(R.id.fragment_container, fragment)
-                .commit()
-        }
-    }
-
-    override fun startStopService(action: Actions) {
-        actionOnService(action)
     }
 
     private fun actionOnService(action: Actions) {
@@ -42,6 +34,17 @@ class MainActivity : AppCompatActivity(), ListFragment.Callbacks {
             }
             log("Starting the service in < 26 Mode")
             startService(it)
+        }
+    }
+
+    private fun init() {
+        startButton = findViewById(R.id.button_start)
+        startButton.setOnClickListener {
+            actionOnService(Actions.START)
+        }
+        stopButton = findViewById(R.id.button_stop)
+        stopButton.setOnClickListener {
+            actionOnService(Actions.STOP)
         }
     }
 }

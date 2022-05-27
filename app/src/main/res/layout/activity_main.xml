@@ -6,55 +6,51 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btnStopService"
-        android:layout_width="wrap_content"
+    <GridLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="300dp"
-        android:text="stop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnStartService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="300dp"
-        android:text="start"
-        app:layout_constraintBottom_toTopOf="@+id/btnStopService"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="horizontal"
+        android:layout_gravity="center">
 
-    <TextView
-        android:id="@+id/textViewInsertsToday"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        <Button
+            android:enabled="false"
+            android:id="@+id/button1"
+            android:text=""
+            android:textSize="15dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="1dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"/>
 
-    <TextView
-        android:id="@+id/textViewInsertsMustBeToday"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewInsertsToday" />
+        <Button
+            android:enabled="false"
+            android:id="@+id/button2"
+            android:text=""
+            android:textSize="15dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="1dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"/>
 
-    <Button
-        android:id="@+id/buttonPrintDates"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button"
-        app:layout_constraintBottom_toTopOf="@+id/btnStartService"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <Button
+            android:id="@+id/button_start"
+            android:text="start"
+            android:textSize="15dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="1dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/button_stop"
+            android:text="stop"
+            android:textSize="15dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="1dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"/>
+    </GridLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,8 @@
 package com.example.batteryservicekotlin
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import com.example.batteryservicekotlin.database.Unit
 
 class MainViewModel : ViewModel() {
 
@@ -9,4 +11,10 @@ class MainViewModel : ViewModel() {
     val unitListLiveData = batteryRepository.getUnits()
 
     val listDatesLiveData = batteryRepository.getDates()
+
+    fun todayUnitsLiveData (startDay: Long, endDay: Long) : LiveData<List<Unit>> {
+        val todayUnitsLiveData = batteryRepository.getChosenDayUnits(startDay, endDay)
+        return todayUnitsLiveData
+    }
+    //val todayUnitsLiveData = batteryRepository.getChosenDayUnits(startDay, endDay)
 }

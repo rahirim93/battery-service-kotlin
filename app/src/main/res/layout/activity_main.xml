@@ -16,9 +16,9 @@
         android:layout_gravity="center">
 
         <Button
-            android:enabled="false"
+            android:enabled="true"
             android:id="@+id/button1"
-            android:text=""
+            android:text="check"
             android:textSize="15dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"

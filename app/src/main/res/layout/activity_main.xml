@@ -6,51 +6,79 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <GridLayout
+    <com.anychart.AnyChartView
+        android:id="@+id/any_chart_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <GridLayout
+        android:id="@+id/gridLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="horizontal"
-        android:layout_gravity="center">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:enabled="true"
             android:id="@+id/button1"
-            android:text="check"
-            android:textSize="15dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:layout_width="80dp"
-            android:layout_height="50dp"/>
+            android:enabled="true"
+            android:text="chart"
+            android:textSize="15dp" />
 
         <Button
-            android:enabled="false"
             android:id="@+id/button2"
-            android:text=""
-            android:textSize="15dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:layout_width="80dp"
-            android:layout_height="50dp"/>
+            android:enabled="true"
+            android:text="full"
+            android:textSize="15dp" />
 
         <Button
             android:id="@+id/button_start"
-            android:text="start"
-            android:textSize="15dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:layout_width="80dp"
-            android:layout_height="50dp"/>
+            android:text="start"
+            android:textSize="15dp" />
 
         <Button
             android:id="@+id/button_stop"
-            android:text="stop"
-            android:textSize="15dp"
+            android:layout_width="80dp"
+            android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:layout_width="80dp"
-            android:layout_height="50dp"/>
+            android:text="stop"
+            android:textSize="15dp" />
     </GridLayout>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test"
+        android:textSize="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/editTextNumber"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="number"
+        app:layout_constraintBottom_toTopOf="@+id/gridLayout"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,9 +12,7 @@ class MainViewModel : ViewModel() {
 
     val listDatesLiveData = batteryRepository.getDates()
 
-    fun todayUnitsLiveData (startDay: Long, endDay: Long) : LiveData<List<Unit>> {
-        val todayUnitsLiveData = batteryRepository.getChosenDayUnits(startDay, endDay)
-        return todayUnitsLiveData
+    fun todayUnitsLiveData(startDay: Long, endDay: Long): LiveData<List<Unit>> {
+        return batteryRepository.getChosenDayUnits(startDay, endDay)
     }
-    //val todayUnitsLiveData = batteryRepository.getChosenDayUnits(startDay, endDay)
 }

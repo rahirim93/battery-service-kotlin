@@ -3,20 +3,23 @@ package com.example.batteryservicekotlin
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.anychart.AnyChart
 import com.anychart.AnyChartView
 import com.anychart.chart.common.dataentry.DataEntry
 import com.anychart.chart.common.dataentry.ValueDataEntry
-import com.anychart.core.series.Cartesian
 import com.anychart.enums.ScaleTypes
 import com.example.batteryservicekotlin.database.Unit
-import com.example.batteryservicekotlin.service.*
+import com.example.batteryservicekotlin.service.Actions
+import com.example.batteryservicekotlin.service.EndlessService
+import com.example.batteryservicekotlin.service.ServiceState
+import com.example.batteryservicekotlin.service.getServiceState
 import java.util.*
 
 
@@ -68,27 +71,40 @@ class MainActivity : AppCompatActivity() {
     private fun testChart2() {
         val dataCurrentNow = arrayListOf<DataEntry>()
         val dataCurrentAverage = arrayListOf<DataEntry>()
+        val dataTemperature = arrayListOf<DataEntry>()
+        val dataVoltage = arrayListOf<DataEntry>()
+        val dataCapacityInMicroampereHours = arrayListOf<DataEntry>()
+        val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         todayListUnits.forEach { unit ->
             // Вынести перевод в часы в отдельную функцию
             val hours = unit.date.hours.toDouble()
             val minutes = unit.date.minutes.toDouble()
             val seconds = unit.date.seconds.toDouble()
-            val x = hours + (minutes / 60) + (seconds/3600)
-            val y = unit.currentNow
-            val i = unit.voltage
-            dataCurrentNow.add(ValueDataEntry(x, y))
-            dataCurrentAverage.add(ValueDataEntry(x, i))
+            val timeHours = hours + (minutes / 60) + (seconds/3600) // Время в часах для оси X
+            dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
+            dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
+            dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
+            dataVoltage.add(ValueDataEntry(timeHours, unit.voltage))
+            dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
+            dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
         }
 
-        var seriesData = line.line(dataCurrentNow).stroke("0.1 black")
-
-        var seriesData2 = line.line(dataCurrentAverage).stroke("0.1 red")
+        var seriesData = line.line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+        var seriesData2 = line.line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+        var seriesData3 = line.line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+        var seriesData4 = line.line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+        var seriesData5 = line.line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+        var seriesData6 = line.line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
     }
 
     private fun test(hour: Int) {
-        var dataCurrentNow = arrayListOf<DataEntry>()
-        var dataCurrentAverage = arrayListOf<DataEntry>()
+        val dataCurrentNow = arrayListOf<DataEntry>()
+        val dataCurrentAverage = arrayListOf<DataEntry>()
+        val dataTemperature = arrayListOf<DataEntry>()
+        val dataVoltage = arrayListOf<DataEntry>()
+        val dataCapacityInMicroampereHours = arrayListOf<DataEntry>()
+        val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         val todayDay = Calendar.getInstance()
         val startTimeCalendar = Calendar.getInstance()
@@ -96,9 +112,8 @@ class MainActivity : AppCompatActivity() {
             todayDay.get(Calendar.YEAR),
             todayDay.get(Calendar.MONTH),
             todayDay.get(Calendar.DAY_OF_MONTH),
-            hour - 1, 0, 0)
+            hour - 3, 0, 0)
         val startTimeMillis = startTimeCalendar.timeInMillis
-        log("Начало: ${startTimeCalendar.get(Calendar.HOUR)}")
 
         val endTimeCalendar = Calendar.getInstance()
         endTimeCalendar.set(
@@ -107,24 +122,28 @@ class MainActivity : AppCompatActivity() {
             todayDay.get(Calendar.DAY_OF_MONTH),
             hour, 0, 0)
         val endTimeMillis = endTimeCalendar.timeInMillis
-        log("Конец: ${endTimeCalendar.get(Calendar.HOUR)}")
 
         todayListUnits.forEach { unit ->
             if (unit.date.time > startTimeMillis && unit.date.time < endTimeMillis) {
                 val hours = unit.date.hours.toDouble()
                 val minutes = unit.date.minutes.toDouble()
                 val seconds = unit.date.seconds.toDouble()
-                val x = hours + (minutes / 60) + (seconds/3600)
-                val y = unit.currentNow
-                val i = unit.voltage
-                dataCurrentNow.add(ValueDataEntry(x, y))
-                dataCurrentAverage.add(ValueDataEntry(x, i))
+                val timeHours = hours + (minutes / 60) + (seconds/3600) // Время в часах для оси X
+                dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
+                dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
+                dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
+                dataVoltage.add(ValueDataEntry(timeHours, unit.voltage))
+                dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
+                dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
             }
         }
 
-        var seriesData = line.line(dataCurrentNow).stroke("0.2 black")
-
-        var seriesData2 = line.line(dataCurrentAverage).stroke("0.2 red")
+        var seriesData = line.line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+        var seriesData2 = line.line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+        var seriesData3 = line.line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+        var seriesData4 = line.line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+        var seriesData5 = line.line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+        var seriesData6 = line.line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
     }
 
 
@@ -134,6 +153,8 @@ class MainActivity : AppCompatActivity() {
         anyChartView = findViewById(R.id.any_chart_view)
         line = AnyChart.line()
         line.xScale(ScaleTypes.LINEAR)
+        // Добавление линии нуля сетки графика
+        val zeroLine = line.lineMarker(0).value(0).stroke("0.1 grey")
         anyChartView.setZoomEnabled(true)
         anyChartView.setChart(line)
 
@@ -147,11 +168,10 @@ class MainActivity : AppCompatActivity() {
         }
         buttonTest = findViewById(R.id.button1)
         buttonTest.setOnClickListener {
-            //testChart2()
-            //test()
         }
         buttonFull = findViewById(R.id.button2)
         buttonFull.setOnClickListener {
+            line.removeAllSeries()
             testChart2()
         }
 
@@ -166,7 +186,7 @@ class MainActivity : AppCompatActivity() {
 
         seekBar = findViewById(R.id.seekBar)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            seekBar.min = 0
+            seekBar.min = 3
         }
         //val b = Calendar.getInstance().
         seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
@@ -181,6 +201,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 if (seekBar != null) {
+                    line.removeAllSeries()
                     test(seekBar.progress)
                 }
             }

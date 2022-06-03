@@ -32,8 +32,8 @@
             android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="true"
-            android:text="chart"
+            android:enabled="false"
+            android:text=""
             android:textSize="15dp" />
 
         <Button

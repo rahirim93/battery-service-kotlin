@@ -83,12 +83,13 @@
             android:textSize="15dp" />
 
         <Button
-            android:enabled="false"
+            android:id="@+id/button_date"
+            android:enabled="true"
             android:layout_width="80dp"
             android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:text=""
+            android:text="date"
             android:textSize="15dp" />
 
         <Button

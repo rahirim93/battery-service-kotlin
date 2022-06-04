@@ -1,12 +1,11 @@
 package com.example.batteryservicekotlin
 
+import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.SeekBar
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -25,6 +24,8 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var datePicker: DatePicker
+
     private lateinit var anyChartView: AnyChartView
 
     private lateinit var todayListUnits: List<Unit>
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonTest: Button
     private lateinit var buttonFull: Button
     private lateinit var buttonRemove: Button
+    private lateinit var buttonDate: Button
 
     private lateinit var textView: TextView
 
@@ -146,39 +148,38 @@ class MainActivity : AppCompatActivity() {
         var seriesData6 = line.line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
     }
 
+    protected override fun onCreateDialog(id: Int): Dialog {
+        if (id == 1) {
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+            var datePickerDialog = DatePickerDialog(this, myCallBack, year, month, day)
+            return datePickerDialog
+        }
+        return super.onCreateDialog(id)
+    }
+    var myCallBack = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
+        Toast.makeText(this, "Year: $year. Month: $month. Day: $dayOfMonth" , Toast.LENGTH_SHORT).show()
+    }
 
+    private fun actionOnService(action: Actions) {
+        if (getServiceState(this) == ServiceState.STOPPED && action == Actions.STOP) return
+        Intent(this, EndlessService::class.java).also {
+            it.action = action.name
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                log("Starting the service in >=26 Mode")
+                startForegroundService(it)
+                return
+            }
+            log("Starting the service in < 26 Mode")
+            startService(it)
+        }
+    }
 
     private fun init() {
-        // Инициализация и настройка графика
-        anyChartView = findViewById(R.id.any_chart_view)
-        line = AnyChart.line()
-        line.xScale(ScaleTypes.LINEAR)
-        // Добавление линии нуля сетки графика
-        val zeroLine = line.lineMarker(0).value(0).stroke("0.1 grey")
-        anyChartView.setZoomEnabled(true)
-        anyChartView.setChart(line)
-
-        startButton = findViewById(R.id.button_start)
-        startButton.setOnClickListener {
-            actionOnService(Actions.START)
-        }
-        stopButton = findViewById(R.id.button_stop)
-        stopButton.setOnClickListener {
-            actionOnService(Actions.STOP)
-        }
-        buttonTest = findViewById(R.id.button1)
-        buttonTest.setOnClickListener {
-        }
-        buttonFull = findViewById(R.id.button2)
-        buttonFull.setOnClickListener {
-            line.removeAllSeries()
-            testChart2()
-        }
-
-        buttonRemove = findViewById(R.id.button_remove)
-        buttonRemove.setOnClickListener {
-            line.removeAllSeries()
-        }
+        initButtons()
+        initChart()
 
         textView = findViewById(R.id.textView)
 
@@ -188,7 +189,6 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             seekBar.min = 3
         }
-        //val b = Calendar.getInstance().
         seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -206,19 +206,44 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
     }
 
-    private fun actionOnService(action: Actions) {
-        if (getServiceState(this) == ServiceState.STOPPED && action == Actions.STOP) return
-        Intent(this, EndlessService::class.java).also {
-            it.action = action.name
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                log("Starting the service in >=26 Mode")
-                startForegroundService(it)
-                return
-            }
-            log("Starting the service in < 26 Mode")
-            startService(it)
+    private fun initButtons() {
+        startButton = findViewById(R.id.button_start)
+        startButton.setOnClickListener {
+            actionOnService(Actions.START)
         }
+        stopButton = findViewById(R.id.button_stop)
+        stopButton.setOnClickListener {
+            actionOnService(Actions.STOP)
+        }
+        buttonTest = findViewById(R.id.button1)
+        buttonTest.setOnClickListener {
+        }
+        buttonFull = findViewById(R.id.button2)
+        buttonFull.setOnClickListener {
+            line.removeAllSeries()
+            testChart2()
+        }
+        buttonRemove = findViewById(R.id.button_remove)
+        buttonRemove.setOnClickListener {
+            line.removeAllSeries()
+        }
+        buttonDate = findViewById(R.id.button_date)
+        buttonDate.setOnClickListener {
+            showDialog(1)
+        }
+    }
+
+    private fun initChart() {
+        // Инициализация и настройка графика
+        anyChartView = findViewById(R.id.any_chart_view)
+        line = AnyChart.line()
+        line.xScale(ScaleTypes.LINEAR)
+        // Добавление линии нуля сетки графика
+        val zeroLine = line.lineMarker(0).value(0).stroke("0.1 grey")
+        anyChartView.setZoomEnabled(true)
+        anyChartView.setChart(line)
     }
 }

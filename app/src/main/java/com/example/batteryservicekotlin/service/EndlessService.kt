@@ -113,7 +113,7 @@ class EndlessService : Service() {
                     updateNotification()
                     counterTimeWork += 5
                 }
-                delay(5000)
+                delay(10000)
             }
             log("End of the loop for the service")
         }

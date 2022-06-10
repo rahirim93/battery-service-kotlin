@@ -19,32 +19,26 @@ import com.example.batteryservicekotlin.service.Actions
 import com.example.batteryservicekotlin.service.EndlessService
 import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
+import java.text.SimpleDateFormat
 import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var datePicker: DatePicker
+    // Кнопки
+    private lateinit var startButton: Button    // Кнопка запуска сервиса
+    private lateinit var stopButton: Button     // Кнопка остановки сервиса
+    private lateinit var buttonDate: Button     // Кнопка выбора даты
+    private lateinit var buttonTest: Button     // Кнопка
+    private lateinit var buttonFull: Button     // Кнопка
+    private lateinit var buttonRemove: Button   // Кнопка
 
     private lateinit var anyChartView: AnyChartView
 
     private lateinit var todayListUnits: List<Unit>
 
-    private lateinit var line: com.anychart.charts.Cartesian
-
-    // Кнопки запуска и остановки сервиса
-    private lateinit var startButton: Button
-    private lateinit var stopButton: Button
-
-    // Остальные кнопки
-    private lateinit var buttonTest: Button
-    private lateinit var buttonFull: Button
-    private lateinit var buttonRemove: Button
-    private lateinit var buttonDate: Button
+    private lateinit var chart: com.anychart.charts.Cartesian
 
     private lateinit var textView: TextView
-
-    private lateinit var editTextView: EditText
 
     private lateinit var seekBar: SeekBar
 
@@ -66,8 +60,14 @@ class MainActivity : AppCompatActivity() {
         endDay = endDayMillis() // Конец дня для запроса выборки из БД
         val batteryObserver = Observer<List<Unit>> { units ->
             todayListUnits = units
+            // Отображение количество записей в БД. Сколько есть и сколько должно быть
+            textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startDay) / 10000}. Факт: ${todayListUnits.size}"
         }
         mainViewModel.todayUnitsLiveData(startDay, endDay).observe(this, batteryObserver)
+    }
+
+    private fun testChart3() {
+
     }
 
     private fun testChart2() {
@@ -79,11 +79,7 @@ class MainActivity : AppCompatActivity() {
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         todayListUnits.forEach { unit ->
-            // Вынести перевод в часы в отдельную функцию
-            val hours = unit.date.hours.toDouble()
-            val minutes = unit.date.minutes.toDouble()
-            val seconds = unit.date.seconds.toDouble()
-            val timeHours = hours + (minutes / 60) + (seconds/3600) // Время в часах для оси X
+            val timeHours = timeInHours(unit.date)
             dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
             dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
             dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
@@ -92,12 +88,14 @@ class MainActivity : AppCompatActivity() {
             dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
         }
 
-        var seriesData = line.line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
-        var seriesData2 = line.line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
-        var seriesData3 = line.line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
-        var seriesData4 = line.line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
-        var seriesData5 = line.line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
-        var seriesData6 = line.line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+        chart.run {
+            line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+            line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+            line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+            line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+            line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+        }
     }
 
     private fun test(hour: Int) {
@@ -127,10 +125,7 @@ class MainActivity : AppCompatActivity() {
 
         todayListUnits.forEach { unit ->
             if (unit.date.time > startTimeMillis && unit.date.time < endTimeMillis) {
-                val hours = unit.date.hours.toDouble()
-                val minutes = unit.date.minutes.toDouble()
-                val seconds = unit.date.seconds.toDouble()
-                val timeHours = hours + (minutes / 60) + (seconds/3600) // Время в часах для оси X
+                val timeHours = timeInHours(unit.date)
                 dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
                 dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
                 dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
@@ -140,12 +135,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        var seriesData = line.line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
-        var seriesData2 = line.line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
-        var seriesData3 = line.line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
-        var seriesData4 = line.line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
-        var seriesData5 = line.line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
-        var seriesData6 = line.line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+        chart.run {
+            line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+            line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+            line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+            line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+            line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+        }
     }
 
     protected override fun onCreateDialog(id: Int): Dialog {
@@ -160,7 +157,14 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateDialog(id)
     }
     var myCallBack = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-        Toast.makeText(this, "Year: $year. Month: $month. Day: $dayOfMonth" , Toast.LENGTH_SHORT).show()
+
+        val calendar = Calendar.getInstance() // Текущая дата
+        calendar.set(year, month, dayOfMonth) // Изменяем на выбранную
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy") //Настройка формата вывода в кнопку
+        buttonDate.text = dateFormat.format(calendar.time) // Вывод в кнопку
+
+        // Здесь нужно добавить сохранение выбранной даты в переменную
+        // для последующего использования для запроса в БД
     }
 
     private fun actionOnService(action: Actions) {
@@ -183,8 +187,6 @@ class MainActivity : AppCompatActivity() {
 
         textView = findViewById(R.id.textView)
 
-        editTextView = findViewById(R.id.editTextNumber)
-
         seekBar = findViewById(R.id.seekBar)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             seekBar.min = 3
@@ -201,7 +203,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 if (seekBar != null) {
-                    line.removeAllSeries()
+                    chart.removeAllSeries()
                     test(seekBar.progress)
                 }
             }
@@ -223,14 +225,15 @@ class MainActivity : AppCompatActivity() {
         }
         buttonFull = findViewById(R.id.button2)
         buttonFull.setOnClickListener {
-            line.removeAllSeries()
+            chart.removeAllSeries()
             testChart2()
         }
         buttonRemove = findViewById(R.id.button_remove)
         buttonRemove.setOnClickListener {
-            line.removeAllSeries()
+            chart.removeAllSeries()
         }
-        buttonDate = findViewById(R.id.button_date)
+        buttonDate = findViewById(R.id.button_date )
+        buttonDate.text = Date().toString()
         buttonDate.setOnClickListener {
             showDialog(1)
         }
@@ -239,11 +242,11 @@ class MainActivity : AppCompatActivity() {
     private fun initChart() {
         // Инициализация и настройка графика
         anyChartView = findViewById(R.id.any_chart_view)
-        line = AnyChart.line()
-        line.xScale(ScaleTypes.LINEAR)
+        chart = AnyChart.line()
+        chart.xScale(ScaleTypes.LINEAR)
         // Добавление линии нуля сетки графика
-        val zeroLine = line.lineMarker(0).value(0).stroke("0.1 grey")
+        val zeroLine = chart.lineMarker(0).value(0).stroke("0.1 grey")
         anyChartView.setZoomEnabled(true)
-        anyChartView.setChart(line)
+        anyChartView.setChart(chart)
     }
 }

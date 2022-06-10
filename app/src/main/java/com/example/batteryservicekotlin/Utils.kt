@@ -36,3 +36,11 @@ fun endDayMillis(): Long {
     // Конец сегодня в миллисекундах
     return todayEndTime.timeInMillis
 }
+
+// Перевод вречени в часы в десятично виде например 15,5 ч.
+fun timeInHours(date: Date): Double {
+    val hours = date.hours.toDouble() // Целых часов
+    val minutes = date.minutes.toDouble() / 60.0 // Минуты в часы
+    val seconds = date.seconds.toDouble() / 3600.0 // Секунды в часы
+    return hours + minutes + seconds
+}

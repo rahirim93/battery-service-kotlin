@@ -17,6 +17,9 @@ interface BatteryDao {
     @Query("SELECT * FROM unit WHERE date BETWEEN :startDay AND :endDay")
     fun getChosenDayUnits(startDay: Long, endDay: Long): LiveData<List<Unit>>
 
+    @Query("SELECT * FROM unit WHERE date BETWEEN :startDay AND :endDay")
+    suspend fun getChosenDayUnitsList(startDay: Long, endDay: Long): List<Unit>
+
     @Query("SELECT date FROM unit")
     fun getDates(): LiveData<List<Date>>
 

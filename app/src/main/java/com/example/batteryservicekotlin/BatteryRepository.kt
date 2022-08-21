@@ -31,6 +31,9 @@ class BatteryRepository private constructor(context: Context) {
     fun getChosenDayUnits(startDay: Long, endDay: Long): LiveData<List<Unit>> =
         batteryDao.getChosenDayUnits(startDay, endDay)
 
+    suspend fun getChosenDayUnitsList(startDay: Long, endDay: Long): List<Unit> =
+        batteryDao.getChosenDayUnitsList(startDay, endDay)
+
     fun addUnit(unit: Unit) {
         executor.execute {
             batteryDao.addUnit(unit)

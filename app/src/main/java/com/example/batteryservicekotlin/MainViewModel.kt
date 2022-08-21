@@ -15,4 +15,8 @@ class MainViewModel : ViewModel() {
     fun todayUnitsLiveData(startDay: Long, endDay: Long): LiveData<List<Unit>> {
         return batteryRepository.getChosenDayUnits(startDay, endDay)
     }
+
+    suspend fun todayUnitsList(startDay: Long, endDay: Long): List<Unit> {
+        return batteryRepository.getChosenDayUnitsList(startDay, endDay)
+    }
 }

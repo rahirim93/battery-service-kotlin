@@ -10,8 +10,7 @@
         android:id="@+id/any_chart_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/seekBar"
+        app:layout_constraintBottom_toTopOf="@+id/slider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,17 +27,17 @@
         android:columnCount="4">
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/buttonTest"
             android:layout_width="80dp"
             android:layout_height="50dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="true"
+            android:enabled="false"
             android:text=""
             android:textSize="15dp" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/buttonFull"
             android:layout_width="80dp"
             android:layout_height="50dp"
             android:layout_columnWeight="1"
@@ -84,8 +83,7 @@
             android:textSize="15dp" />
 
         <Button
-            android:id="@+id/button123"
-            android:enabled="true"
+            android:enabled="false"
             android:layout_width="80dp"
             android:layout_height="50dp"
             android:layout_columnWeight="1"
@@ -116,21 +114,31 @@
         app:layout_constraintStart_toStartOf="parent" />
 
 
-    <SeekBar
-        android:id="@+id/seekBar"
+
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/slider"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:layout_margin="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="40dp"
+        android:stepSize="1.0"
+        android:valueFrom="0.0"
+        android:valueTo="24.0"
+        app:values="@array/initial_slider_values"
         app:layout_constraintBottom_toTopOf="@+id/button_date"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"/>
+
 
     <Button
         android:id="@+id/button_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:text="Button"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:text="Выберете дату"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

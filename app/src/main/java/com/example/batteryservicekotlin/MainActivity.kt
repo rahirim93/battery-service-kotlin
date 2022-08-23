@@ -1,12 +1,12 @@
 package com.example.batteryservicekotlin
 
-import android.app.DatePickerDialog
-import android.app.Dialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.widget.*
+import android.widget.Button
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -21,10 +21,10 @@ import com.example.batteryservicekotlin.service.EndlessService
 import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.slider.RangeSlider
+import com.google.android.material.slider.Slider
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 
 /** Пока что не получается сделать запрос и получить ответ единожды.
@@ -40,14 +40,6 @@ import kotlin.collections.ArrayList
  */
 
 class MainActivity : AppCompatActivity() {
-    // Массивы для хранения данных для графика
-    private lateinit var dataCurrentNow: ArrayList<DataEntry>
-    private lateinit var dataCurrentAverage: ArrayList<DataEntry>
-    private lateinit var dataTemperature: ArrayList<DataEntry>
-    private lateinit var dataVoltage: ArrayList<DataEntry>
-    private lateinit var dataCapacityInMicroampereHours: ArrayList<DataEntry>
-    private lateinit var dataCapacityInPercentage: ArrayList<DataEntry>
-
     // Выбор даты. (Material Date Picker)
     private lateinit var datePicker: MaterialDatePicker<Long>
 
@@ -59,7 +51,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonTest: Button     // Кнопка
     private lateinit var buttonFull: Button     // Кнопка
     private lateinit var buttonRemove: Button   // Кнопка
-    private lateinit var button123: Button
 
     private lateinit var anyChartView: AnyChartView
 
@@ -69,96 +60,42 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var textView: TextView
 
-    private lateinit var seekBar: SeekBar
-
-    private var startDay: Long = 0
-    private var endDay: Long = 0
-
-    private var list: List<Unit>? = null
+    private lateinit var slider: RangeSlider
 
     private val mainViewModel: MainViewModel by lazy {
         ViewModelProviders.of(this).get(MainViewModel::class.java)
     }
 
+    private var flag = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         actionOnService(Actions.START) // Запуск службы при запуске приложения
 
         init() // Инициализация виджетов
 
         // Запрос данных БД сегодняшнего дня
         getDataFromDB(startDayMillis(), endDayMillis())
-
-        //list = mainViewModel.todayUnitsList(startDayMillis(),endDayMillis())
-        //log("${list?.size}")
-    }
-
-    private fun initDatePicker() {
-        datePicker = MaterialDatePicker.Builder.datePicker().setTitleText("SelectDate").build()
-        datePicker.addOnPositiveButtonClickListener {
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = datePicker.selection!!
-            var sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            Toast.makeText(this, "${sdf.format(calendar.time)}", Toast.LENGTH_SHORT).show()
-            var sdf2 = SimpleDateFormat("HH:mm", Locale.getDefault())
-            Toast.makeText(this, "${sdf2.format(calendar.time)}", Toast.LENGTH_SHORT).show()
-            mainViewModel.todayUnitsLiveData(
-                startChosenDay(calendar).timeInMillis,
-                endChosenDay(calendar).timeInMillis).observe(this, batteryObserver)
-            chart.removeAllSeries()
-            testChart2()
-        }
     }
 
     // Запрос данных БД выбранного промежутка времени
     private fun getDataFromDB(startTimeOfRequest: Long, endTimeOfRequest: Long) {
         batteryObserver = Observer<List<Unit>> { units ->
-            todayListUnits = units
+            if (flag) {
+                todayListUnits = units
+                flag = false
+                Toast.makeText(this, "Данные получены", Toast.LENGTH_SHORT).show()
+                log("Размер: ${todayListUnits.size}")
+            }
             // Отображение количество записей в БД. Сколько есть и сколько должно быть
-            textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startTimeOfRequest) / 10000}. Факт: ${todayListUnits.size}"
+            //textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startTimeOfRequest) / 10000}. Факт: ${todayListUnits.size}"
         }
         mainViewModel.todayUnitsLiveData(startTimeOfRequest, endTimeOfRequest).observe(this, batteryObserver)
     }
 
-    // Подготовка данных для графика
-    private fun filteredDataForGraph(startTime: Long, endTime: Long) {
-        dataCurrentNow = arrayListOf()
-        dataCurrentAverage = arrayListOf()
-        dataTemperature = arrayListOf()
-        dataVoltage = arrayListOf()
-        dataCapacityInMicroampereHours = arrayListOf()
-        dataCapacityInPercentage = arrayListOf()
-
-        todayListUnits.forEach { unit ->
-            if (unit.date.time > startTime && unit.date.time < endTime) {
-                val timeHours = timeInHours(unit.date)
-                dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
-                dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
-                dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
-                dataVoltage.add(ValueDataEntry(timeHours, unit.voltage))
-                dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
-                dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
-            }
-        }
-    }
-
-    private fun drawGraph() {
-        chart.run {
-            line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
-            line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
-            line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
-            line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
-            line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
-            line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
-        }
-    }
-
-    private fun testChart3() {
-
-    }
-
-    private fun testChart2() {
+    private fun fullGraph() {
         val dataCurrentNow = arrayListOf<DataEntry>()
         val dataCurrentAverage = arrayListOf<DataEntry>()
         val dataTemperature = arrayListOf<DataEntry>()
@@ -186,7 +123,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun test(hour: Int) {
+    private fun chosenGraph(startTime: Calendar, endTime: Calendar) {
         val dataCurrentNow = arrayListOf<DataEntry>()
         val dataCurrentAverage = arrayListOf<DataEntry>()
         val dataTemperature = arrayListOf<DataEntry>()
@@ -194,22 +131,9 @@ class MainActivity : AppCompatActivity() {
         val dataCapacityInMicroampereHours = arrayListOf<DataEntry>()
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
-        val todayDay = Calendar.getInstance()
-        val startTimeCalendar = Calendar.getInstance()
-        startTimeCalendar.set(
-            todayDay.get(Calendar.YEAR),
-            todayDay.get(Calendar.MONTH),
-            todayDay.get(Calendar.DAY_OF_MONTH),
-            hour - 3, 0, 0)
-        val startTimeMillis = startTimeCalendar.timeInMillis
+        val startTimeMillis = startTime.timeInMillis
 
-        val endTimeCalendar = Calendar.getInstance()
-        endTimeCalendar.set(
-            todayDay.get(Calendar.YEAR),
-            todayDay.get(Calendar.MONTH),
-            todayDay.get(Calendar.DAY_OF_MONTH),
-            hour, 0, 0)
-        val endTimeMillis = endTimeCalendar.timeInMillis
+        val endTimeMillis = endTime.timeInMillis
 
         todayListUnits.forEach { unit ->
             if (unit.date.time > startTimeMillis && unit.date.time < endTimeMillis) {
@@ -233,42 +157,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    protected override fun onCreateDialog(id: Int): Dialog {
-        if (id == 1) {
-            val calendar = Calendar.getInstance()
-            val year = calendar.get(Calendar.YEAR)
-            val month = calendar.get(Calendar.MONTH)
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-            var datePickerDialog = DatePickerDialog(this, myCallBack, year, month, day)
-            return datePickerDialog
-        }
-        return super.onCreateDialog(id)
-    }
-    var myCallBack = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
-
-        val calendar = Calendar.getInstance() // Текущая дата
-        calendar.set(year, month, dayOfMonth) // Изменяем на выбранную
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy") //Настройка формата вывода в кнопку
-        buttonDate.text = dateFormat.format(calendar.time) // Вывод в кнопку
-
-        // Здесь нужно добавить сохранение выбранной даты в переменную
-        // для последующего использования для запроса в БД
-    }
-
-    private fun actionOnService(action: Actions) {
-        if (getServiceState(this) == ServiceState.STOPPED && action == Actions.STOP) return
-        Intent(this, EndlessService::class.java).also {
-            it.action = action.name
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                log("Starting the service in >=26 Mode")
-                startForegroundService(it)
-                return
-            }
-            log("Starting the service in < 26 Mode")
-            startService(it)
-        }
-    }
-
     private fun init() {
         initButtons()
         initChart()
@@ -276,28 +164,47 @@ class MainActivity : AppCompatActivity() {
 
         textView = findViewById(R.id.textView)
 
-        seekBar = findViewById(R.id.seekBar)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            seekBar.min = 3
-        }
-        seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                textView.text = progress.toString()
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        slider = findViewById(R.id.slider)
+        slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
+            override fun onStartTrackingTouch(slider: RangeSlider) {
 
             }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                if (seekBar != null) {
-                    chart.removeAllSeries()
-                    test(seekBar.progress)
+            override fun onStopTrackingTouch(slider: RangeSlider) {
+                //myToast(applicationContext, "${slider.values[0]}")
+                //myToast(applicationContext, "${slider.values[1]}")
+                val calendarStart = Calendar.getInstance()
+                val calendarEnd = Calendar.getInstance()
+                // При запуске на datePicker не установлена дата, при обращении
+                // выкидывает исключение
+                // поэтому сначала надо выбрать дату
+                // иначе выкидываем предупреждающий тост
+                if(datePicker.selection != null) {
+                    // Время начала выборки текущей даты
+                    calendarStart.timeInMillis = datePicker.selection!!
+                    calendarStart.set(Calendar.HOUR_OF_DAY, slider.values[0].toInt())
+                    // Время конца выборки текущей даты
+                    calendarEnd.timeInMillis = datePicker.selection!!
+                    // Если выбрать 24, то это уже следующий день
+                    // Поэтому если выбор на 24, то делаем на 1 сек раньше, чтобы остаться в теущих сутках
+                    if (slider.values[1].toInt() == 24) {
+                        calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
+                        calendarEnd.set(Calendar.MINUTE, 59)
+                        calendarEnd.set(Calendar.SECOND, 59)
+                        //myToast(applicationContext, "${calendarStart.time}")
+                        //myToast(applicationContext, "${calendarEnd.time}")
+                    } else {
+                        calendarEnd.set(Calendar.HOUR_OF_DAY, slider.values[1].toInt())
+                        //myToast(applicationContext, "${calendarStart.time}")
+                        //myToast(applicationContext, "${calendarEnd.time}")
+                    }
+                } else {
+                    myToast(applicationContext, "Выберете дату")
                 }
+                chart.removeAllSeries()
+                chosenGraph(calendarStart, calendarEnd)
             }
         })
-
     }
 
     private fun initButtons() {
@@ -309,29 +216,43 @@ class MainActivity : AppCompatActivity() {
         stopButton.setOnClickListener {
             actionOnService(Actions.STOP)
         }
-        buttonTest = findViewById(R.id.button1)
+        buttonTest = findViewById(R.id.buttonTest)
         buttonTest.setOnClickListener {
-            datePicker.show(supportFragmentManager, "datePicker")
         }
-        buttonFull = findViewById(R.id.button2)
+
+        buttonFull = findViewById(R.id.buttonFull)
         buttonFull.setOnClickListener {
             chart.removeAllSeries()
-            testChart2()
+            fullGraph()
         }
+
         buttonRemove = findViewById(R.id.button_remove)
         buttonRemove.setOnClickListener {
             chart.removeAllSeries()
         }
-        buttonDate = findViewById(R.id.button_date )
-        buttonDate.text = Date().toString()
-        buttonDate.setOnClickListener {
-            showDialog(1)
-        }
 
-        button123 = findViewById(R.id.button123)
-        button123.isEnabled = true
-        button123.setOnClickListener {
-            log("${list?.size}")
+        buttonDate = findViewById(R.id.button_date )
+        val calendar = Calendar.getInstance()
+        val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        buttonDate.text = sdf.format(calendar.time)
+        buttonDate.setOnClickListener {
+            datePicker.show(supportFragmentManager, "datePicker")
+        }
+    }
+
+    private fun initDatePicker() {
+        datePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Выберете дату").build()
+        datePicker.addOnPositiveButtonClickListener {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = datePicker.selection!!
+
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            buttonDate.text = sdf.format(calendar.time)
+
+            flag = true
+            mainViewModel.todayUnitsLiveData(
+                startChosenDay(calendar).timeInMillis,
+                endChosenDay(calendar).timeInMillis).observe(this, batteryObserver)
         }
     }
 
@@ -348,7 +269,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         log("onResume")
-        seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
+        //seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
     }
 
     override fun onStop() {
@@ -365,5 +286,19 @@ class MainActivity : AppCompatActivity() {
         val zeroLine = chart.lineMarker(0).value(0).stroke("0.1 grey")
         anyChartView.setZoomEnabled(true)
         anyChartView.setChart(chart)
+    }
+
+    private fun actionOnService(action: Actions) {
+        if (getServiceState(this) == ServiceState.STOPPED && action == Actions.STOP) return
+        Intent(this, EndlessService::class.java).also {
+            it.action = action.name
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                //log("Starting the service in >=26 Mode")
+                startForegroundService(it)
+                return
+            }
+            //log("Starting the service in < 26 Mode")
+            startService(it)
+        }
     }
 }

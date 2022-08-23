@@ -1,6 +1,8 @@
 package com.example.batteryservicekotlin
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import java.util.*
 
 fun log(msg: String) {
@@ -63,4 +65,8 @@ fun endChosenDay(chosenDay: Calendar): Calendar {
     calendar.set(Calendar.SECOND, 59)
     calendar.set(Calendar.MILLISECOND, 999)
     return calendar
+}
+
+fun myToast(context: Context, string: String) {
+    Toast.makeText(context, string, Toast.LENGTH_SHORT).show()
 }

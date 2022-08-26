@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
-import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,12 +21,12 @@ import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
-import com.google.android.material.slider.Slider
 import java.text.SimpleDateFormat
 import java.util.*
 
 
-/** Пока что не получается сделать запрос и получить ответ единожды.
+/** РЕШЕНО
+ *  Пока что не получается сделать запрос и получить ответ единожды.
  * Я могу только подписаться на LiveData c помощью Observer.
  * Поэтому пока напишем то что можно но более менее чисто.
  * Итого в данный момент делаем так.
@@ -36,7 +35,9 @@ import java.util.*
  * Все полученные данные не должны автоматически обновляться, поэтому надоэ
  * сделать флажок который после ответа от бд будет закрывать обновление.
  * При работ с данными одного дня работаем уже без запросов к БД, только с тем что уже подгружено.
+ * РЕШЕНО
  *
+ * Нужно сделать чтобы при подгрузке отрисовывался полный график сегодняшнего дня
  */
 
 class MainActivity : AppCompatActivity() {
@@ -48,9 +49,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var startButton: Button    // Кнопка запуска сервиса
     private lateinit var stopButton: Button     // Кнопка остановки сервиса
     private lateinit var buttonDate: Button     // Кнопка выбора даты
-    private lateinit var buttonTest: Button     // Кнопка
-    private lateinit var buttonFull: Button     // Кнопка
-    private lateinit var buttonRemove: Button   // Кнопка
+    private lateinit var buttonFull: Button     // Кнопка вывода графика за весь день
+    private lateinit var buttonRemove: Button   // Кнопка очистки графика
+    private lateinit var buttonRefresh: Button  // Кнопка обновления графика
 
     private lateinit var anyChartView: AnyChartView
 
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var flag = true
+    private var flagRefresh = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +90,17 @@ class MainActivity : AppCompatActivity() {
                 flag = false
                 Toast.makeText(this, "Данные получены", Toast.LENGTH_SHORT).show()
                 log("Размер: ${todayListUnits.size}")
+
+                // Обновление графика в текущем отрезке
+                if (flagRefresh) {
+                    flagRefresh = false
+                    chart.removeAllSeries()
+                    chosenGraph(
+                        sliderStartInCalendar(slider, datePicker),
+                        sliderEndInCalendar(slider, datePicker))
+                } else {
+
+                }
             }
             // Отображение количество записей в БД. Сколько есть и сколько должно быть
             //textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startTimeOfRequest) / 10000}. Факт: ${todayListUnits.size}"
@@ -171,38 +184,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStopTrackingTouch(slider: RangeSlider) {
-                //myToast(applicationContext, "${slider.values[0]}")
-                //myToast(applicationContext, "${slider.values[1]}")
-                val calendarStart = Calendar.getInstance()
-                val calendarEnd = Calendar.getInstance()
                 // При запуске на datePicker не установлена дата, при обращении
-                // выкидывает исключение
-                // поэтому сначала надо выбрать дату
+                // выкидывает исключение. Поэтому сначала надо выбрать дату
                 // иначе выкидываем предупреждающий тост
-                if(datePicker.selection != null) {
-                    // Время начала выборки текущей даты
-                    calendarStart.timeInMillis = datePicker.selection!!
-                    calendarStart.set(Calendar.HOUR_OF_DAY, slider.values[0].toInt())
-                    // Время конца выборки текущей даты
-                    calendarEnd.timeInMillis = datePicker.selection!!
-                    // Если выбрать 24, то это уже следующий день
-                    // Поэтому если выбор на 24, то делаем на 1 сек раньше, чтобы остаться в теущих сутках
-                    if (slider.values[1].toInt() == 24) {
-                        calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
-                        calendarEnd.set(Calendar.MINUTE, 59)
-                        calendarEnd.set(Calendar.SECOND, 59)
-                        //myToast(applicationContext, "${calendarStart.time}")
-                        //myToast(applicationContext, "${calendarEnd.time}")
-                    } else {
-                        calendarEnd.set(Calendar.HOUR_OF_DAY, slider.values[1].toInt())
-                        //myToast(applicationContext, "${calendarStart.time}")
-                        //myToast(applicationContext, "${calendarEnd.time}")
-                    }
+                if (datePicker.selection != null) {
+                    chart.removeAllSeries()
+                    chosenGraph(
+                        sliderStartInCalendar(slider, datePicker),
+                        sliderEndInCalendar(slider, datePicker))
                 } else {
                     myToast(applicationContext, "Выберете дату")
                 }
-                chart.removeAllSeries()
-                chosenGraph(calendarStart, calendarEnd)
             }
         })
     }
@@ -212,18 +204,22 @@ class MainActivity : AppCompatActivity() {
         startButton.setOnClickListener {
             actionOnService(Actions.START)
         }
+
         stopButton = findViewById(R.id.button_stop)
         stopButton.setOnClickListener {
             actionOnService(Actions.STOP)
-        }
-        buttonTest = findViewById(R.id.buttonTest)
-        buttonTest.setOnClickListener {
         }
 
         buttonFull = findViewById(R.id.buttonFull)
         buttonFull.setOnClickListener {
             chart.removeAllSeries()
             fullGraph()
+        }
+
+        buttonRefresh = findViewById(R.id.button_refresh)
+        buttonRefresh.setOnClickListener {
+            flag = true
+            flagRefresh = true
         }
 
         buttonRemove = findViewById(R.id.button_remove)
@@ -254,27 +250,6 @@ class MainActivity : AppCompatActivity() {
                 startChosenDay(calendar).timeInMillis,
                 endChosenDay(calendar).timeInMillis).observe(this, batteryObserver)
         }
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        log("onRestart")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        log("onStart")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        log("onResume")
-        //seekBar.max = Calendar.getInstance().get(Calendar.HOUR_OF_DAY) + 1
-    }
-
-    override fun onStop() {
-        super.onStop()
-        log("onStop")
     }
 
     private fun initChart() {

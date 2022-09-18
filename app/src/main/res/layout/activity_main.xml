@@ -13,7 +13,9 @@
         app:layout_constraintBottom_toTopOf="@+id/slider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" >
+
+    </com.anychart.AnyChartView>
 
     <GridLayout
         android:id="@+id/gridLayout"
@@ -102,34 +104,6 @@
             android:textSize="15dp" />
     </GridLayout>
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="test"
-        android:textSize="15dp"
-        app:layout_constraintBottom_toTopOf="@+id/gridLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-
-
-    <com.google.android.material.slider.RangeSlider
-        android:id="@+id/slider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="40dp"
-        android:stepSize="1.0"
-        android:valueFrom="0.0"
-        android:valueTo="24.0"
-        app:values="@array/initial_slider_values"
-        app:layout_constraintBottom_toTopOf="@+id/button_date"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
-
 
     <Button
         android:id="@+id/button_date"
@@ -139,7 +113,80 @@
         android:layout_marginStart="40dp"
         android:layout_marginEnd="40dp"
         android:text="Выберете дату"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.901"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/gridLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <CheckBox
+            android:id="@+id/checkBoxCurrentNow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Тек.ток" />
+
+        <CheckBox
+            android:id="@+id/checkBoxCurrentAverage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Ср.ток" />
+
+        <CheckBox
+            android:id="@+id/checkBoxTemperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Темп." />
+
+        <CheckBox
+            android:id="@+id/checkBoxVoltage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Напр." />
+
+        <CheckBox
+            android:id="@+id/checkBoxCapacityInMicroampereHours"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Емк.мА" />
+
+        <CheckBox
+            android:id="@+id/checkBoxCapacityInPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="Емк.%" />
+    </LinearLayout>
+
+    <com.google.android.material.slider.RangeSlider
+        android:id="@+id/slider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:stepSize="1.0"
+        android:valueFrom="0.0"
+        android:valueTo="24.0"
+        app:layout_constraintBottom_toTopOf="@+id/button_date"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:values="@array/initial_slider_values" />
 </androidx.constraintlayout.widget.ConstraintLayout>

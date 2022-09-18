@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -53,13 +54,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonRemove: Button   // Кнопка очистки графика
     private lateinit var buttonRefresh: Button  // Кнопка обновления графика
 
+    private lateinit var checkBoxCurrentNow: CheckBox
+    private lateinit var checkBoxCurrentAverage: CheckBox
+    private lateinit var checkBoxTemperature: CheckBox
+    private lateinit var checkBoxVoltage: CheckBox
+    private lateinit var checkBoxCapacityInMicroampereHours: CheckBox
+    private lateinit var checkBoxCapacityInPercentage: CheckBox
+
     private lateinit var anyChartView: AnyChartView
 
     private lateinit var todayListUnits: List<Unit>
 
     private lateinit var chart: com.anychart.charts.Cartesian
-
-    private lateinit var textView: TextView
 
     private lateinit var slider: RangeSlider
 
@@ -151,22 +157,34 @@ class MainActivity : AppCompatActivity() {
         todayListUnits.forEach { unit ->
             if (unit.date.time > startTimeMillis && unit.date.time < endTimeMillis) {
                 val timeHours = timeInHours(unit.date)
-                dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
-                dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
-                dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
-                dataVoltage.add(ValueDataEntry(timeHours, unit.voltage))
-                dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
+                dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow / 100.0))
+                dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage / 100.0))
+                dataTemperature.add(ValueDataEntry(timeHours, unit.temperature!! / 10.0))
+                dataVoltage.add(ValueDataEntry(timeHours, unit.voltage!! / 100.0))
+                dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000000.0))
                 dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
             }
         }
 
         chart.run {
-            line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
-            line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
-            line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
-            line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
-            line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
-            line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+            if(checkBoxCurrentNow.isChecked) {
+                line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+            }
+            if(checkBoxCurrentAverage.isChecked) {
+                line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+            }
+            if(checkBoxTemperature.isChecked) {
+                line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+            }
+            if(checkBoxVoltage.isChecked) {
+                line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+            }
+            if(checkBoxCapacityInMicroampereHours.isChecked) {
+                line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            }
+            if(checkBoxCapacityInPercentage.isChecked) {
+                line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+            }
         }
     }
 
@@ -174,8 +192,7 @@ class MainActivity : AppCompatActivity() {
         initButtons()
         initChart()
         initDatePicker()
-
-        textView = findViewById(R.id.textView)
+        initCheckBoxes()
 
         slider = findViewById(R.id.slider)
         slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
@@ -197,6 +214,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun initCheckBoxes() {
+        checkBoxCurrentNow = findViewById(R.id.checkBoxCurrentNow)
+        checkBoxCurrentAverage = findViewById(R.id.checkBoxCurrentAverage)
+        checkBoxTemperature = findViewById(R.id.checkBoxTemperature)
+        checkBoxVoltage = findViewById(R.id.checkBoxVoltage)
+        checkBoxCapacityInMicroampereHours = findViewById(R.id.checkBoxCapacityInMicroampereHours)
+        checkBoxCapacityInPercentage = findViewById(R.id.checkBoxCapacityInPercentage)
     }
 
     private fun initButtons() {

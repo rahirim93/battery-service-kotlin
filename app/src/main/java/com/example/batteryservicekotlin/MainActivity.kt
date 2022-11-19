@@ -283,6 +283,16 @@ class MainActivity : AppCompatActivity() {
         anyChartView = findViewById(R.id.any_chart_view)
         chart = AnyChart.line()
         chart.xScale(ScaleTypes.LINEAR)
+
+        // Настройка отображения времени в всплывающей подсказке
+        chart.tooltip().titleFormat("function() {\n" +
+                "var hours = Math.trunc(this.x);\n" +
+                "var minutes = Math.trunc((this.x - hours) * 60);\n" +
+                "var seconds = Math.trunc((((this.x - hours)*60) - minutes) * 60);\n" +
+                "return 'Время: ' + hours + ':' + minutes + ':' + seconds;" +
+                "\n" +
+                "}")
+
         // Добавление линии нуля сетки графика
         val zeroLine = chart.lineMarker(0).value(0).stroke("0.1 grey")
         anyChartView.setZoomEnabled(true)

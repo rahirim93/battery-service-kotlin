@@ -10,6 +10,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.anychart.AnyChart
 import com.anychart.AnyChartView
 import com.anychart.chart.common.dataentry.DataEntry
@@ -24,6 +28,7 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 /** РЕШЕНО
@@ -53,6 +58,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var buttonFull: Button     // Кнопка вывода графика за весь день
     private lateinit var buttonRemove: Button   // Кнопка очистки графика
     private lateinit var buttonRefresh: Button  // Кнопка обновления графика
+    private lateinit var buttonStartWorker: Button
+    private lateinit var buttonStopWorker: Button
+
 
     private lateinit var checkBoxCurrentNow: CheckBox
     private lateinit var checkBoxCurrentAverage: CheckBox
@@ -259,6 +267,17 @@ class MainActivity : AppCompatActivity() {
         buttonDate.text = sdf.format(calendar.time)
         buttonDate.setOnClickListener {
             datePicker.show(supportFragmentManager, "datePicker")
+        }
+
+        buttonStartWorker = findViewById(R.id.buttonStartWorker)
+        buttonStartWorker.setOnClickListener {
+            val myWorkRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES).build()
+            WorkManager.getInstance(this).enqueue(myWorkRequest)
+        }
+
+        buttonStopWorker = findViewById(R.id.buttonStopWorker)
+        buttonStopWorker.setOnClickListener {
+            WorkManager.getInstance(this).cancelAllWork()
         }
     }
 

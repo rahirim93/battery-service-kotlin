@@ -30,76 +30,96 @@
 
         <Button
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:enabled="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text=""
             android:textSize="15dp" />
 
         <Button
             android:id="@+id/buttonFull"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:enabled="true"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text="full"
             android:textSize="15dp" />
 
         <Button
             android:id="@+id/button_start"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:text="start"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="starts"
             android:textSize="15dp" />
 
         <Button
             android:id="@+id/button_stop"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:text="stop"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="stops"
             android:textSize="15dp" />
 
         <Button
+
             android:id="@+id/button_refresh"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:enabled="true"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text="refresh"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonStopWorker"
+            android:enabled="true"
+            android:layout_width="80dp"
+            android:layout_height="35dp"
+            android:layout_columnWeight="1"
+            android:layout_margin="1dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="stopw"
             android:textSize="15dp" />
 
         <Button
-            android:enabled="false"
+            android:id="@+id/buttonStartWorker"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:text=""
-            android:textSize="15dp" />
-
-        <Button
-            android:enabled="false"
-            android:layout_width="80dp"
-            android:layout_height="50dp"
-            android:layout_columnWeight="1"
-            android:layout_margin="1dp"
-            android:text=""
-            android:textSize="15dp" />
+            android:enabled="true"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="100dip"
+            android:text="startw"
+            android:textSize="15dp"/>
 
         <Button
             android:id="@+id/button_remove"
             android:enabled="true"
             android:layout_width="80dp"
-            android:layout_height="50dp"
+            android:layout_height="35dp"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             android:text="remove"
             android:textSize="15dp" />
     </GridLayout>

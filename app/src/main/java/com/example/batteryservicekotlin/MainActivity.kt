@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.CheckBox
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +23,7 @@ import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
+import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -51,31 +51,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chosenDay: Calendar
 
     private lateinit var batteryObserver: Observer<List<Unit>>
-    // Кнопки
-    private lateinit var startButton: Button    // Кнопка запуска сервиса
-    private lateinit var stopButton: Button     // Кнопка остановки сервиса
-    private lateinit var buttonDate: Button     // Кнопка выбора даты
-    private lateinit var buttonFull: Button     // Кнопка вывода графика за весь день
-    private lateinit var buttonRemove: Button   // Кнопка очистки графика
-    private lateinit var buttonRefresh: Button  // Кнопка обновления графика
-    private lateinit var buttonStartWorker: Button
-    private lateinit var buttonStopWorker: Button
 
-
-    private lateinit var checkBoxCurrentNow: CheckBox
-    private lateinit var checkBoxCurrentAverage: CheckBox
-    private lateinit var checkBoxTemperature: CheckBox
-    private lateinit var checkBoxVoltage: CheckBox
-    private lateinit var checkBoxCapacityInMicroamperesHours: CheckBox
-    private lateinit var checkBoxCapacityInPercentage: CheckBox
-
-    private lateinit var anyChartView: AnyChartView
 
     private lateinit var todayListUnits: List<Unit>
 
     private lateinit var chart: com.anychart.charts.Cartesian
-
-    private lateinit var slider: RangeSlider
 
     private val mainViewModel: MainViewModel by lazy {
         ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -202,7 +182,6 @@ class MainActivity : AppCompatActivity() {
         initDatePicker()
         initCheckBoxes()
 
-        slider = findViewById(R.id.slider)
         // Доделать программуную установку движков слайдера
         val list = mutableListOf<Float>()
         list.add(5.0F)
@@ -230,57 +209,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initCheckBoxes() {
-        checkBoxCurrentNow = findViewById(R.id.checkBoxCurrentNow)
-        checkBoxCurrentAverage = findViewById(R.id.checkBoxCurrentAverage)
-        checkBoxTemperature = findViewById(R.id.checkBoxTemperature)
-        checkBoxVoltage = findViewById(R.id.checkBoxVoltage)
-        checkBoxCapacityInMicroamperesHours = findViewById(R.id.checkBoxCapacityInMicroampereHours)
-        checkBoxCapacityInPercentage = findViewById(R.id.checkBoxCapacityInPercentage)
+
     }
 
     private fun initButtons() {
-        startButton = findViewById(R.id.button_start)
-        startButton.setOnClickListener {
+        button_start.setOnClickListener {
             actionOnService(Actions.START)
         }
 
-        stopButton = findViewById(R.id.button_stop)
-        stopButton.setOnClickListener {
+        button_stop.setOnClickListener {
             actionOnService(Actions.STOP)
         }
 
-        buttonFull = findViewById(R.id.buttonFull)
         buttonFull.setOnClickListener {
             chart.removeAllSeries()
             fullGraph()
         }
 
-        buttonRefresh = findViewById(R.id.button_refresh)
         buttonRefresh.setOnClickListener {
             flag = true
             flagRefresh = true
         }
 
-        buttonRemove = findViewById(R.id.button_remove)
         buttonRemove.setOnClickListener {
             chart.removeAllSeries()
         }
 
-        buttonDate = findViewById(R.id.button_date )
         val calendar = Calendar.getInstance()
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        buttonDate.text = sdf.format(calendar.time)
-        buttonDate.setOnClickListener {
+        button_date.text = sdf.format(calendar.time)
+        button_date.setOnClickListener {
             datePicker.show(supportFragmentManager, "datePicker")
         }
 
-        buttonStartWorker = findViewById(R.id.buttonStartWorker)
         buttonStartWorker.setOnClickListener {
             val myWorkRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES).build()
             WorkManager.getInstance(this).enqueue(myWorkRequest)
         }
 
-        buttonStopWorker = findViewById(R.id.buttonStopWorker)
         buttonStopWorker.setOnClickListener {
             WorkManager.getInstance(this).cancelAllWork()
             WorkManager.getInstance(this).pruneWork()
@@ -295,7 +261,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("myTag", "Дата ${calendar.time}")
 
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            buttonDate.text = sdf.format(calendar.time)
+            button_date.text = sdf.format(calendar.time)
 
             flag = true
             mainViewModel.chosenDayUnitsLiveData(
@@ -306,7 +272,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initChart() {
         // Инициализация и настройка графика
-        anyChartView = findViewById(R.id.any_chart_view)
         chart = AnyChart.line()
         chart.xScale(ScaleTypes.LINEAR)
         chart.yAxis(0).enabled(false)

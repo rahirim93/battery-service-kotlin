@@ -4,17 +4,17 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.CheckBox
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.anychart.AnyChart
-import com.anychart.AnyChartView
 import com.anychart.chart.common.dataentry.DataEntry
 import com.anychart.chart.common.dataentry.ValueDataEntry
+import com.anychart.charts.Cartesian
 import com.anychart.enums.ScaleTypes
 import com.example.batteryservicekotlin.database.Unit
 import com.example.batteryservicekotlin.service.Actions
@@ -27,6 +27,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
 /** РЕШЕНО
@@ -45,17 +46,18 @@ import java.util.concurrent.TimeUnit
  */
 
 class MainActivity : AppCompatActivity() {
-    // Выбор даты. (Material Date Picker)
-    private lateinit var datePicker: MaterialDatePicker<Long>
 
-    private lateinit var chosenDay: Calendar
+    private lateinit var datePicker: MaterialDatePicker<Long>    // Выбор даты. (Material Date Picker)
 
-    private lateinit var batteryObserver: Observer<List<Unit>>
+    private lateinit var chosenDay: Calendar // Выбранный день
 
+    private lateinit var chosenListUnits: List<Unit> // Данные выбранного дня
 
-    private lateinit var todayListUnits: List<Unit>
+    private lateinit var batteryObserver: Observer<List<Unit>> // Наблюдатель данных выбранного дня
 
-    private lateinit var chart: com.anychart.charts.Cartesian
+    private lateinit var chosenDayLiveData: LiveData<List<Unit>>
+
+    private lateinit var chart: Cartesian // График
 
     private val mainViewModel: MainViewModel by lazy {
         ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -74,32 +76,29 @@ class MainActivity : AppCompatActivity() {
 
         init() // Инициализация виджетов
 
-        // Запрос данных БД сегодняшнего дня
-        getDataFromDB(startDayMillis(), endDayMillis())
+        getDataFromDB(startChosenDay(chosenDay).timeInMillis, endChosenDay(chosenDay).timeInMillis) // Запрос данных БД сегодняшнего дня
     }
 
     // Запрос данных БД выбранного промежутка времени
     private fun getDataFromDB(startTimeOfRequest: Long, endTimeOfRequest: Long) {
         batteryObserver = Observer<List<Unit>> { units ->
-            if (flag) {
-                todayListUnits = units
-                flag = false
+            Log.d("myTag", "${Calendar.getInstance().time}")
+            if (true) {
+                chosenListUnits = units
+                //flag = false
                 Toast.makeText(this, "Данные получены", Toast.LENGTH_SHORT).show()
-                log("Размер: ${todayListUnits.size}")
+                log("Размер: ${chosenListUnits.size}")
 
-                // Обновление графика в текущем отрезке
-                if (flagRefresh) {
-                    flagRefresh = false
-                    chart.removeAllSeries()
-                    chosenGraph(
-                        sliderStartInCalendar(slider, datePicker),
-                        sliderEndInCalendar(slider, datePicker))
-                }
+//                // Обновление графика в текущем отрезке
+//                if (flagRefresh) {
+//                    flagRefresh = false
+//                    chart.removeAllSeries()
+//                    //chosenGraph(sliderStartInCalendar(slider, datePicker), sliderEndInCalendar(slider, datePicker))
+//                }
             }
-            // Отображение количество записей в БД. Сколько есть и сколько должно быть
-            //textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startTimeOfRequest) / 10000}. Факт: ${todayListUnits.size}"
         }
-        mainViewModel.chosenDayUnitsLiveData(startTimeOfRequest, endTimeOfRequest).observe(this, batteryObserver)
+        chosenDayLiveData = mainViewModel.chosenDayUnitsLiveData(startTimeOfRequest, endTimeOfRequest)
+        chosenDayLiveData.observe(this, batteryObserver)
     }
 
     private fun fullGraph() {
@@ -110,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         val dataCapacityInMicroamperesHours = arrayListOf<DataEntry>()
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
-        todayListUnits.forEach { unit ->
+        chosenListUnits.forEach { unit ->
             val timeHours = timeInHours(unit.date)
             dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow))
             dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
@@ -142,7 +141,7 @@ class MainActivity : AppCompatActivity() {
 
         val endTimeMillis = endTime.timeInMillis
 
-        todayListUnits.forEach { unit ->
+        chosenListUnits.forEach { unit ->
             if (unit.date.time > startTimeMillis && unit.date.time < endTimeMillis) {
                 val timeHours = timeInHours(unit.date)
                 dataCurrentNow.add(ValueDataEntry(timeHours, unit.currentNow / 100.0))
@@ -176,6 +175,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun chosenGraphTest(list: ArrayList<Unit>) {
+        val dataCurrentNow = arrayListOf<DataEntry>()
+        val dataCurrentAverage = arrayListOf<DataEntry>()
+        val dataTemperature = arrayListOf<DataEntry>()
+        val dataVoltage = arrayListOf<DataEntry>()
+        val dataCapacityInMicroamperesHours = arrayListOf<DataEntry>()
+        val dataCapacityInPercentage = arrayListOf<DataEntry>()
+
+        list.forEach { unit ->
+            dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow / 100.0))
+            dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage / 100.0))
+            dataTemperature.add(ValueDataEntry(timeInHours(unit.date), unit.temperature!! / 10.0))
+            dataVoltage.add(ValueDataEntry(timeInHours(unit.date), unit.voltage!! / 100.0))
+            dataCapacityInMicroamperesHours.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInMicroampereHours / 1000000.0))
+            dataCapacityInPercentage.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInPercentage))
+        }
+
+        chart.run {
+            if(checkBoxCurrentNow.isChecked) {
+                line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
+            }
+            if(checkBoxCurrentAverage.isChecked) {
+                line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
+            }
+            if(checkBoxTemperature.isChecked) {
+                line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
+            }
+            if(checkBoxVoltage.isChecked) {
+                line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
+            }
+            if(checkBoxCapacityInMicroamperesHours.isChecked) {
+                line(dataCapacityInMicroamperesHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            }
+            if(checkBoxCapacityInPercentage.isChecked) {
+                line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
+            }
+        }
+    }
+
+    private fun filteredList(list: List<Unit>, startCalendar: Calendar, endCalendar: Calendar): ArrayList<Unit> {
+        Log.d("filteredList", "${startCalendar.time}")
+        Log.d("filteredList", "${endCalendar.time}")
+        Log.d("filteredList", "${list.size}")
+        val arrayList = ArrayList<Unit>()
+        list.forEach { unit ->
+//            Log.d("filteredList", "${startCalendar.timeInMillis}")
+//            Log.d("filteredList", "${unit.date.time}")
+//            Log.d("filteredList", "${endCalendar.timeInMillis}")
+//            Log.d("filteredList", "")
+            if (unit.date.time > startCalendar.timeInMillis && unit.date.time < endCalendar.timeInMillis) {
+                Log.d("filteredList", "${list.size}")
+
+                arrayList.add(unit)
+            }
+        }
+        Log.d("filteredList", "${arrayList.size}")
+        return arrayList
+    }
+
     private fun init() {
         initButtons()
         initChart()
@@ -196,14 +254,19 @@ class MainActivity : AppCompatActivity() {
                 // При запуске на datePicker не установлена дата, при обращении
                 // выкидывает исключение. Поэтому сначала надо выбрать дату
                 // иначе выкидываем предупреждающий тост
-                if (datePicker.selection != null) {
-                    chart.removeAllSeries()
-                    chosenGraph(
-                        sliderStartInCalendar(slider, datePicker),
-                        sliderEndInCalendar(slider, datePicker))
-                } else {
-                    myToast(applicationContext, "Выберете дату")
-                }
+//                if (datePicker.selection != null) {
+//                    chart.removeAllSeries()
+//                    chosenGraph(
+//                        sliderStartInCalendar(slider, datePicker),
+//                        sliderEndInCalendar(slider, datePicker))
+//                } else {
+//                    myToast(applicationContext, "Выберете дату")
+//                }
+                chart.removeAllSeries()
+                chosenGraphTest(filteredList(
+                    chosenListUnits,
+                    sliderStartInCalendar(slider, chosenDay),
+                    sliderEndInCalendar(slider, chosenDay)))
             }
         })
     }
@@ -240,6 +303,33 @@ class MainActivity : AppCompatActivity() {
         button_date.text = sdf.format(calendar.time)
         button_date.setOnClickListener {
             datePicker.show(supportFragmentManager, "datePicker")
+            //datePicker.
+        }
+
+        buttonNextDate.setOnClickListener {
+            chosenDay.timeInMillis = chosenDay.timeInMillis + 24 * 60 * 60 * 1000
+            if(chosenDayLiveData.hasObservers()) {
+                chosenDayLiveData.removeObserver(batteryObserver)
+                chosenDayLiveData = mainViewModel.chosenDayUnitsLiveData(
+                    startChosenDay(chosenDay).timeInMillis,
+                    endChosenDay(chosenDay).timeInMillis)
+                chosenDayLiveData.observe(this, batteryObserver)
+            }
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            button_date.text = sdf.format(chosenDay.time)
+        }
+
+        buttonPreviousDate.setOnClickListener {
+            chosenDay.timeInMillis = chosenDay.timeInMillis - 24 * 60 * 60 * 1000
+            if(chosenDayLiveData.hasObservers()) {
+                chosenDayLiveData.removeObserver(batteryObserver)
+                chosenDayLiveData = mainViewModel.chosenDayUnitsLiveData(
+                    startChosenDay(chosenDay).timeInMillis,
+                    endChosenDay(chosenDay).timeInMillis)
+                chosenDayLiveData.observe(this, batteryObserver)
+            }
+            val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            button_date.text = sdf.format(chosenDay.time)
         }
 
         buttonStartWorker.setOnClickListener {
@@ -257,16 +347,21 @@ class MainActivity : AppCompatActivity() {
         datePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Выберете дату").build()
         datePicker.addOnPositiveButtonClickListener {
             val calendar = Calendar.getInstance()
-            calendar.timeInMillis = datePicker.selection!! //
+            calendar.timeInMillis = datePicker.selection!!
             Log.d("myTag", "Дата ${calendar.time}")
 
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             button_date.text = sdf.format(calendar.time)
 
-            flag = true
-            mainViewModel.chosenDayUnitsLiveData(
-                startChosenDay(calendar).timeInMillis,
-                endChosenDay(calendar).timeInMillis).observe(this, batteryObserver)
+            chosenDay = calendar
+
+            if(chosenDayLiveData.hasObservers()) {
+                chosenDayLiveData.removeObserver(batteryObserver)
+                chosenDayLiveData = mainViewModel.chosenDayUnitsLiveData(
+                    startChosenDay(chosenDay).timeInMillis,
+                    endChosenDay(chosenDay).timeInMillis)
+                chosenDayLiveData.observe(this, batteryObserver)
+            }
         }
     }
 

@@ -125,18 +125,40 @@
     </GridLayout>
 
 
-    <Button
-        android:id="@+id/button_date"
+
+
+    <LinearLayout
+        android:id="@+id/linearLayoutButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:text="Выберете дату"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.901"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout">
+
+        <Button
+            android:id="@+id/buttonPreviousDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="1dp"/>
+
+        <Button
+            android:id="@+id/button_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:text="Выберете дату" />
+
+        <Button
+            android:id="@+id/buttonNextDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="1dp" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -205,7 +227,7 @@
         android:stepSize="0.5"
         android:valueFrom="0.0"
         android:valueTo="24.0"
-        app:layout_constraintBottom_toTopOf="@+id/button_date"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:values="@array/initial_slider_values" />

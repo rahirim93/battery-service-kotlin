@@ -150,7 +150,7 @@ class EndlessService : Service() {
         //Оставшаяся емкость аккумулятора в виде целого процента от общей емкости (без дробной части).
         val capacityInPercentage = batteryManager
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        Log.d(TAG, "Capacity: $capacityInPercentage") // Чтобы видеть при закрытом приложении в логе что ТМИ пишется
+        //Log.d(TAG, "Capacity: $capacityInPercentage") // Чтобы видеть при закрытом приложении в логе что ТМИ пишется
 
         // Емкость аккумулятора в микроампер-часах, как целое число.
         val capacityInMicroampereHours = batteryManager

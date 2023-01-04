@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
 fun log(msg: String) {
@@ -74,39 +75,22 @@ fun myToast(context: Context, string: String) {
 }
 
 // Возвращает начало выбранного отрезка выбранного для в виде календаря
-fun sliderStartInCalendar(slider: RangeSlider, datePicker: MaterialDatePicker<Long>): Calendar {
-    val sliderStart = slider.values[0].toInt()  // Значение начала слайдера
-    val calendarStart = Calendar.getInstance()  // Время начала выборки
-
-    // Время начала выборки текущей даты приводим к дате выбранной в datePicker
-    calendarStart.timeInMillis = datePicker.selection!!
-    // При получении даты из datePicker время там установлено на 3:00:00.
-    // Поэтому корректируем только поле часов
-    calendarStart.set(Calendar.HOUR_OF_DAY, sliderStart)
-
-    return calendarStart
+fun sliderStartInCalendar(slider: RangeSlider, chosenDay: Calendar): Calendar {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = startChosenDay(chosenDay).timeInMillis + (slider.values[0] * 60 * 60 * 1000).toLong()
+    return calendar
 }
 
 // Возвращает конец выбранного отрезка выбранного для в виде календаря
-fun sliderEndInCalendar(slider: RangeSlider, datePicker: MaterialDatePicker<Long>): Calendar {
-    val sliderEnd = slider.values[1].toInt()    // Значение конца слайдера
-    val calendarEnd = Calendar.getInstance()    // Время конца выборки
-    // Время конца выборки текущей даты
-    calendarEnd.timeInMillis = datePicker.selection!!
+fun sliderEndInCalendar(slider: RangeSlider, chosenDay: Calendar): Calendar {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = startChosenDay(chosenDay).timeInMillis + + (slider.values[1] * 60 * 60 * 1000).toLong()
     // Если выбрать 24, то это уже следующий день
-    // Поэтому если выбор на 24, то делаем на 1 сек раньше, чтобы остаться в теущих сутках
-    if (sliderEnd == 24) {
-        calendarEnd.set(Calendar.HOUR_OF_DAY, 23)
-        calendarEnd.set(Calendar.MINUTE, 59)
-        calendarEnd.set(Calendar.SECOND, 59)
-        //myToast(applicationContext, "${calendarStart.time}")
-        //myToast(applicationContext, "${calendarEnd.time}")
+    // Поэтому если выбор на 24, то делаем на 1 сек раньше, чтобы остаться в текущих сутках
+    return if (slider.values[1].toInt() != 24) {
+        calendar
     } else {
-        // При получении даты из datePicker время там установлено на 3:00:00.
-        // Поэтому корректируем только поле часов
-        calendarEnd.set(Calendar.HOUR_OF_DAY, sliderEnd)
-        //myToast(applicationContext, "${calendarStart.time}")
-        //myToast(applicationContext, "${calendarEnd.time}")
+        calendar.timeInMillis = calendar.timeInMillis - 1000
+        calendar
     }
-    return calendarEnd
 }

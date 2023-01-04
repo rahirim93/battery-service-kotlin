@@ -184,12 +184,12 @@ class MainActivity : AppCompatActivity() {
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         list.forEach { unit ->
-            dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow / 100.0))
-            dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage / 100.0))
-            dataTemperature.add(ValueDataEntry(timeInHours(unit.date), unit.temperature!! / 10.0))
-            dataVoltage.add(ValueDataEntry(timeInHours(unit.date), unit.voltage!! / 100.0))
-            dataCapacityInMicroamperesHours.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInMicroampereHours / 1000000.0))
-            dataCapacityInPercentage.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInPercentage))
+            dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow))
+            dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
+            dataTemperature.add(ValueDataEntry(timeInHours(unit.date), unit.temperature!!))
+            dataVoltage.add(ValueDataEntry(timeInHours(unit.date), unit.voltage!! / 10.0))
+            dataCapacityInMicroamperesHours.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInMicroampereHours / 3000.0))
+            dataCapacityInPercentage.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInPercentage * 13))
         }
 
         chart.run {
@@ -215,22 +215,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun filteredList(list: List<Unit>, startCalendar: Calendar, endCalendar: Calendar): ArrayList<Unit> {
-        Log.d("filteredList", "${startCalendar.time}")
-        Log.d("filteredList", "${endCalendar.time}")
-        Log.d("filteredList", "${list.size}")
         val arrayList = ArrayList<Unit>()
         list.forEach { unit ->
-//            Log.d("filteredList", "${startCalendar.timeInMillis}")
-//            Log.d("filteredList", "${unit.date.time}")
-//            Log.d("filteredList", "${endCalendar.timeInMillis}")
-//            Log.d("filteredList", "")
             if (unit.date.time > startCalendar.timeInMillis && unit.date.time < endCalendar.timeInMillis) {
-                Log.d("filteredList", "${list.size}")
-
                 arrayList.add(unit)
             }
         }
-        Log.d("filteredList", "${arrayList.size}")
         return arrayList
     }
 

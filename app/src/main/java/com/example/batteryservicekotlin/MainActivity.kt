@@ -3,17 +3,15 @@ package com.example.batteryservicekotlin
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.anychart.AnyChart
 import com.anychart.AnyChartView
 import com.anychart.chart.common.dataentry.DataEntry
@@ -50,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     // Выбор даты. (Material Date Picker)
     private lateinit var datePicker: MaterialDatePicker<Long>
 
+    private lateinit var chosenDay: Calendar
+
     private lateinit var batteryObserver: Observer<List<Unit>>
     // Кнопки
     private lateinit var startButton: Button    // Кнопка запуска сервиса
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var checkBoxCurrentAverage: CheckBox
     private lateinit var checkBoxTemperature: CheckBox
     private lateinit var checkBoxVoltage: CheckBox
-    private lateinit var checkBoxCapacityInMicroampereHours: CheckBox
+    private lateinit var checkBoxCapacityInMicroamperesHours: CheckBox
     private lateinit var checkBoxCapacityInPercentage: CheckBox
 
     private lateinit var anyChartView: AnyChartView
@@ -87,6 +87,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        chosenDay = Calendar.getInstance()
 
         actionOnService(Actions.START) // Запуск службы при запуске приложения
 
@@ -112,14 +114,12 @@ class MainActivity : AppCompatActivity() {
                     chosenGraph(
                         sliderStartInCalendar(slider, datePicker),
                         sliderEndInCalendar(slider, datePicker))
-                } else {
-
                 }
             }
             // Отображение количество записей в БД. Сколько есть и сколько должно быть
             //textView.text = "Записей должно быть: ${(Calendar.getInstance().timeInMillis - startTimeOfRequest) / 10000}. Факт: ${todayListUnits.size}"
         }
-        mainViewModel.todayUnitsLiveData(startTimeOfRequest, endTimeOfRequest).observe(this, batteryObserver)
+        mainViewModel.chosenDayUnitsLiveData(startTimeOfRequest, endTimeOfRequest).observe(this, batteryObserver)
     }
 
     private fun fullGraph() {
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
         val dataCurrentAverage = arrayListOf<DataEntry>()
         val dataTemperature = arrayListOf<DataEntry>()
         val dataVoltage = arrayListOf<DataEntry>()
-        val dataCapacityInMicroampereHours = arrayListOf<DataEntry>()
+        val dataCapacityInMicroamperesHours = arrayListOf<DataEntry>()
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         todayListUnits.forEach { unit ->
@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity() {
             dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage + 2000))
             dataTemperature.add(ValueDataEntry(timeHours, unit.temperature))
             dataVoltage.add(ValueDataEntry(timeHours, unit.voltage))
-            dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
+            dataCapacityInMicroamperesHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000))
             dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
         }
 
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
             line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
             line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
             line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
-            line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            line(dataCapacityInMicroamperesHours).stroke("0.2 purple").name("Емк.мач(ф)")
             line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
         }
     }
@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         val dataCurrentAverage = arrayListOf<DataEntry>()
         val dataTemperature = arrayListOf<DataEntry>()
         val dataVoltage = arrayListOf<DataEntry>()
-        val dataCapacityInMicroampereHours = arrayListOf<DataEntry>()
+        val dataCapacityInMicroamperesHours = arrayListOf<DataEntry>()
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
         val startTimeMillis = startTime.timeInMillis
@@ -169,7 +169,7 @@ class MainActivity : AppCompatActivity() {
                 dataCurrentAverage.add(ValueDataEntry(timeHours, unit.currentAverage / 100.0))
                 dataTemperature.add(ValueDataEntry(timeHours, unit.temperature!! / 10.0))
                 dataVoltage.add(ValueDataEntry(timeHours, unit.voltage!! / 100.0))
-                dataCapacityInMicroampereHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000000.0))
+                dataCapacityInMicroamperesHours.add(ValueDataEntry(timeHours, unit.capacityInMicroampereHours / 1000000.0))
                 dataCapacityInPercentage.add(ValueDataEntry(timeHours, unit.capacityInPercentage))
             }
         }
@@ -187,8 +187,8 @@ class MainActivity : AppCompatActivity() {
             if(checkBoxVoltage.isChecked) {
                 line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
             }
-            if(checkBoxCapacityInMicroampereHours.isChecked) {
-                line(dataCapacityInMicroampereHours).stroke("0.2 purple").name("Емк.мач(ф)")
+            if(checkBoxCapacityInMicroamperesHours.isChecked) {
+                line(dataCapacityInMicroamperesHours).stroke("0.2 purple").name("Емк.мач(ф)")
             }
             if(checkBoxCapacityInPercentage.isChecked) {
                 line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
@@ -203,6 +203,11 @@ class MainActivity : AppCompatActivity() {
         initCheckBoxes()
 
         slider = findViewById(R.id.slider)
+        // Доделать программуную установку движков слайдера
+        val list = mutableListOf<Float>()
+        list.add(5.0F)
+        list.add(10.0F)
+        slider.values = list
         slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
             override fun onStartTrackingTouch(slider: RangeSlider) {
 
@@ -229,7 +234,7 @@ class MainActivity : AppCompatActivity() {
         checkBoxCurrentAverage = findViewById(R.id.checkBoxCurrentAverage)
         checkBoxTemperature = findViewById(R.id.checkBoxTemperature)
         checkBoxVoltage = findViewById(R.id.checkBoxVoltage)
-        checkBoxCapacityInMicroampereHours = findViewById(R.id.checkBoxCapacityInMicroampereHours)
+        checkBoxCapacityInMicroamperesHours = findViewById(R.id.checkBoxCapacityInMicroampereHours)
         checkBoxCapacityInPercentage = findViewById(R.id.checkBoxCapacityInPercentage)
     }
 
@@ -278,6 +283,7 @@ class MainActivity : AppCompatActivity() {
         buttonStopWorker = findViewById(R.id.buttonStopWorker)
         buttonStopWorker.setOnClickListener {
             WorkManager.getInstance(this).cancelAllWork()
+            WorkManager.getInstance(this).pruneWork()
         }
     }
 
@@ -285,13 +291,14 @@ class MainActivity : AppCompatActivity() {
         datePicker = MaterialDatePicker.Builder.datePicker().setTitleText("Выберете дату").build()
         datePicker.addOnPositiveButtonClickListener {
             val calendar = Calendar.getInstance()
-            calendar.timeInMillis = datePicker.selection!!
+            calendar.timeInMillis = datePicker.selection!! //
+            Log.d("myTag", "Дата ${calendar.time}")
 
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             buttonDate.text = sdf.format(calendar.time)
 
             flag = true
-            mainViewModel.todayUnitsLiveData(
+            mainViewModel.chosenDayUnitsLiveData(
                 startChosenDay(calendar).timeInMillis,
                 endChosenDay(calendar).timeInMillis).observe(this, batteryObserver)
         }
@@ -302,6 +309,7 @@ class MainActivity : AppCompatActivity() {
         anyChartView = findViewById(R.id.any_chart_view)
         chart = AnyChart.line()
         chart.xScale(ScaleTypes.LINEAR)
+        chart.yAxis(0).enabled(false)
 
         // Настройка отображения времени в всплывающей подсказке
         chart.tooltip().titleFormat("function() {\n" +

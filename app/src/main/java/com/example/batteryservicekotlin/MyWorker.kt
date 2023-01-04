@@ -36,6 +36,17 @@ class MyWorker(private val context: Context, workerParams: WorkerParameters
 
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(0, notification)
+        } else {
+//            val notification = NotificationCompat
+//                .Builder(context, "rahirim")
+//                .setTicker("Hello")
+//                .setContentText("Было: $savedSize Стало: $size")
+//                .setSmallIcon(android.R.drawable.ic_menu_report_image)
+//                .setAutoCancel(true)
+//                .build()
+//
+//            val notificationManager = NotificationManagerCompat.from(context)
+//            notificationManager.notify(0, notification)
         }
 
         val editor = pref?.edit()

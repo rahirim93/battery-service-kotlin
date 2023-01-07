@@ -360,6 +360,7 @@ class MainActivity : AppCompatActivity() {
         chart = AnyChart.line()
         chart.xScale(ScaleTypes.LINEAR)
         chart.yAxis(0).enabled(false)
+        //chart.legend().enabled(true)
 
         // Настройка отображения времени в всплывающей подсказке
         chart.tooltip().titleFormat("function() {\n" +
@@ -369,6 +370,26 @@ class MainActivity : AppCompatActivity() {
                 "return 'Время: ' + hours + ':' + minutes + ':' + seconds;" +
                 "\n" +
                 "}")
+
+        // Настройка отображения величин "х" в вспывающей подсказке
+        chart
+            .tooltip()
+            .format("function() {\n" +
+                    "if (this.seriesName == 'Тек.ток(ч)') {"+
+                    "return this.seriesName + ': ' + this.value + ' мА';"+
+                    "} else if (this.seriesName == 'Ср.ток(к)') {"+
+                    "return this.seriesName + ': ' + this.value + ' мА';"+
+                    "} else if (this.seriesName == 'Темп.(г)') {"+
+                    "return this.seriesName + ': ' + (Number(this.value) / 10.0) + ' \u2103';"+
+                    "} else if (this.seriesName == 'Напр.(з)') {"+
+                    "return this.seriesName + ': ' + (Number(this.value)/100.0).toFixed(2) + ' В';"+
+                    "} else if (this.seriesName == 'Емк.мач(ф)') {"+
+                    "return this.seriesName + ': ' + (Number(this.value)* 3).toFixed(0) + ' мА\u00B7ч';"+
+                    "} else if (this.seriesName == 'Емк.%(ц)') {"+
+                    "return this.seriesName + ': ' + (Number(this.value)/ 13).toFixed(0) + ' \u0025';"+
+                    "}"+
+                    "\n" +
+                    "}")
 
         // Добавление линии нуля сетки графика
         val zeroLine = chart.lineMarker(0).value(0).stroke("0.1 grey")

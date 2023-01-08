@@ -45,7 +45,9 @@ import kotlin.collections.ArrayList
  * Нужно сделать чтобы при подгрузке отрисовывался полный график сегодняшнего дня
  */
 
+
 class MainActivity : AppCompatActivity() {
+    private val stepSlider = 0.2F // Шаг слайдера
 
     private lateinit var datePicker: MaterialDatePicker<Long>    // Выбор даты. (Material Date Picker)
 
@@ -230,28 +232,13 @@ class MainActivity : AppCompatActivity() {
         initDatePicker()
         initCheckBoxes()
 
-        // Доделать программуную установку движков слайдера
-        val list = mutableListOf<Float>()
-        list.add(5.0F)
-        list.add(10.0F)
-        slider.values = list
+
         slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
             override fun onStartTrackingTouch(slider: RangeSlider) {
 
             }
 
             override fun onStopTrackingTouch(slider: RangeSlider) {
-                // При запуске на datePicker не установлена дата, при обращении
-                // выкидывает исключение. Поэтому сначала надо выбрать дату
-                // иначе выкидываем предупреждающий тост
-//                if (datePicker.selection != null) {
-//                    chart.removeAllSeries()
-//                    chosenGraph(
-//                        sliderStartInCalendar(slider, datePicker),
-//                        sliderEndInCalendar(slider, datePicker))
-//                } else {
-//                    myToast(applicationContext, "Выберете дату")
-//                }
                 chart.removeAllSeries()
                 chosenGraphTest(filteredList(
                     chosenListUnits,
@@ -259,6 +246,13 @@ class MainActivity : AppCompatActivity() {
                     sliderEndInCalendar(slider, chosenDay)))
             }
         })
+        slider.addOnChangeListener { slider, value, fromUser ->
+            chart.removeAllSeries()
+            chosenGraphTest(filteredList(
+                chosenListUnits,
+                sliderStartInCalendar(slider, chosenDay),
+                sliderEndInCalendar(slider, chosenDay)))
+        }
     }
 
     private fun initCheckBoxes() {
@@ -330,6 +324,50 @@ class MainActivity : AppCompatActivity() {
         buttonStopWorker.setOnClickListener {
             WorkManager.getInstance(this).cancelAllWork()
             WorkManager.getInstance(this).pruneWork()
+        }
+
+        buttonStartPrev.setOnClickListener {
+            // Программная установка движков слайдера
+            val list = mutableListOf<Float>()
+            val newStartThumbValue = slider.values[0] - stepSlider  // Значение ползунка начала
+            val endThumbValue = slider.values[1]                    // Значение ползунка конца
+            if (newStartThumbValue < 0) return@setOnClickListener   // Проверяем не выйдет ли сладер за 0, если выходит, то прерываем выполнение
+            list.add(newStartThumbValue)                            // Добавляем в массив с величинами слайдера измененное значение первого ползунка
+            list.add(endThumbValue)                                 // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
+            slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+        }
+
+        buttonStartNext.setOnClickListener {
+            // Программная установка движков слайдера
+            val list = mutableListOf<Float>()
+            val newStartThumbValue = slider.values[0] + stepSlider                          // Новое значение ползунка начала
+            val endThumbValue = slider.values[1]                                            // Значение ползунка конца
+            if (endThumbValue - newStartThumbValue < stepSlider) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
+            list.add(newStartThumbValue)                                                    // Добавляем в массив с величинами слайдера измененное значение первого ползунка
+            list.add(endThumbValue)                                                         // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
+            slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+        }
+
+        buttonEndPrev.setOnClickListener {
+            // Программная установка движков слайдера
+            val list = mutableListOf<Float>()
+            val startThumbValue = slider.values[0]                                          // Значение ползунка начала
+            val newEndThumbValue = slider.values[1] - stepSlider                            // Новое значение ползунка конца
+            if (newEndThumbValue - startThumbValue < stepSlider) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
+            list.add(startThumbValue)                                                       // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
+            list.add(newEndThumbValue)                                                      // Добавляем в массив с величинами слайдера измененное значение второго ползунка
+            slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+        }
+
+        buttonEndNext.setOnClickListener {
+            // Программная установка движков слайдера
+            val list = mutableListOf<Float>()
+            val startThumbValue = slider.values[0]                  // Значение ползунка начала
+            val newEndThumbValue = slider.values[1] + stepSlider    // Новое значение ползунка конца
+            if (newEndThumbValue > 24) return@setOnClickListener    // Проверяем не выйдет ли слайдер за максимальное значение, если выйдет, то прерываем выполнение
+            list.add(startThumbValue)                               // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
+            list.add(newEndThumbValue)                              // Добавляем в массив с величинами слайдера измененное значение второго ползунка
+            slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
         }
     }
 

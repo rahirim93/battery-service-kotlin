@@ -10,7 +10,7 @@
         android:id="@+id/anyChartView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/slider"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutSlider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" >
@@ -124,8 +124,55 @@
             android:textSize="15dp" />
     </GridLayout>
 
+    <LinearLayout
+        android:id="@+id/linearLayoutSlider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutButtons">
+
+        <Button
+            android:id="@+id/buttonStartPrev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:layout_marginLeft="1dp"
+            android:layout_marginRight="1dp"/>
+
+        <Button
+            android:id="@+id/buttonStartNext"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"/>
 
 
+        <com.google.android.material.slider.RangeSlider
+            android:id="@+id/slider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:stepSize="0.2"
+            android:valueFrom="0.0"
+            android:valueTo="24.0"
+            android:layout_weight="0.5"
+            app:values="@array/initial_slider_values" />
+
+        <Button
+            android:id="@+id/buttonEndPrev"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1" />
+
+        <Button
+            android:id="@+id/buttonEndNext"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:layout_marginRight="1dp"
+            android:layout_marginLeft="1dp"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/linearLayoutButtons"
@@ -148,7 +195,7 @@
             android:id="@+id/button_date"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="0.5"
             android:text="Выберете дату" />
 
         <Button
@@ -218,17 +265,5 @@
             android:text="Емк.%" />
     </LinearLayout>
 
-    <com.google.android.material.slider.RangeSlider
-        android:id="@+id/slider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:stepSize="0.5"
-        android:valueFrom="0.0"
-        android:valueTo="24.0"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayoutButtons"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:values="@array/initial_slider_values" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

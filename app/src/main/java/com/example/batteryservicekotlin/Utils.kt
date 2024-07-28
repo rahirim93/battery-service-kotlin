@@ -42,7 +42,7 @@ fun endDayMillis(): Long {
     return todayEndTime.timeInMillis
 }
 
-// Перевод вречени в часы в десятично виде например 15,5 ч.
+// Перевод времени в часы в десятичном виде например 15,5 ч.
 fun timeInHours(date: Date): Double {
     val hours = date.hours.toDouble() // Целых часов
     val minutes = date.minutes.toDouble() / 60.0 // Минуты в часы
@@ -52,7 +52,7 @@ fun timeInHours(date: Date): Double {
 
 // Начало выбранного дня
 fun startChosenDay(chosenDay: Calendar): Calendar {
-    var calendar = chosenDay
+    val calendar = chosenDay
     calendar.set(Calendar.HOUR_OF_DAY, 0)
     calendar.set(Calendar.MINUTE, 0)
     calendar.set(Calendar.SECOND, 0)
@@ -62,7 +62,7 @@ fun startChosenDay(chosenDay: Calendar): Calendar {
 
 // Начало выбранного дня
 fun endChosenDay(chosenDay: Calendar): Calendar {
-    var calendar = chosenDay
+    val calendar = chosenDay
     calendar.set(Calendar.HOUR_OF_DAY, 23)
     calendar.set(Calendar.MINUTE, 59)
     calendar.set(Calendar.SECOND, 59)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -29,99 +30,99 @@
         android:columnCount="4">
 
         <Button
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:id="@+id/buttonSettings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="false"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text=""
-            android:textSize="15dp" />
+            android:text="Настройки"
+            android:textSize="8sp" />
 
         <Button
             android:id="@+id/buttonFull"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="true"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="true"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="full"
-            android:textSize="15dp" />
+            android:text="сохр"
+            android:textSize="9dp" />
 
         <Button
             android:id="@+id/button_start"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="true"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="starts"
-            android:textSize="15dp" />
+            android:text="отпр"
+            android:textSize="9dp" />
 
         <Button
             android:id="@+id/button_stop"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="true"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="stops"
-            android:textSize="15dp" />
+            android:text="удал"
+            android:textSize="9dp" />
 
         <Button
-
             android:id="@+id/buttonRefresh"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="false"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="true"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="refresh"
-            android:textSize="12sp" />
+            android:text=""
+            android:textSize="9dp" />
 
         <Button
             android:id="@+id/buttonStopWorker"
-            android:enabled="true"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="false"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="stopw"
-            android:textSize="15dp" />
+            android:text=""
+            android:textSize="9dp" />
 
         <Button
             android:id="@+id/buttonStartWorker"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="false"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
-            android:enabled="true"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:minHeight="100dip"
-            android:text="startw"
-            android:textSize="15dp"/>
+            android:text=""
+            android:textSize="9dp"/>
 
         <Button
             android:id="@+id/buttonRemove"
-            android:enabled="true"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
+            android:enabled="false"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="1dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:text="remove"
-            android:textSize="15dp" />
+            android:text=""
+            android:textSize="9dp" />
     </GridLayout>
 
     <LinearLayout
@@ -147,12 +148,12 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.1"/>
 
-
+        <!--            android:stepSize="0.2"-->
         <com.google.android.material.slider.RangeSlider
             android:id="@+id/slider"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:stepSize="0.2"
+
             android:valueFrom="0.0"
             android:valueTo="24.0"
             android:layout_weight="0.5"
@@ -183,13 +184,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout">
 
-        <Button
+        <ImageButton
             android:id="@+id/buttonPreviousDate"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.2"
-            android:layout_marginRight="2dp"
-            android:layout_marginLeft="1dp"/>
+            android:src="@drawable/arrow_left"/>
 
         <Button
             android:id="@+id/button_date"
@@ -263,6 +263,14 @@
             android:layout_weight="1"
             android:textSize="10sp"
             android:text="Емк.%" />
+
+        <CheckBox
+            android:id="@+id/checkBoxCapacitySum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="10sp"
+            android:text="" />
     </LinearLayout>
 
 

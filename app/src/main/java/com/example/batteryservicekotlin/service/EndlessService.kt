@@ -83,7 +83,8 @@ class EndlessService : Service() {
         val restartServiceIntent = Intent(applicationContext, EndlessService::class.java).also {
             it.setPackage(packageName)
         }
-        val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT)
+        val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this, 1, restartServiceIntent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
         applicationContext.getSystemService(Context.ALARM_SERVICE)
         val alarmService: AlarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent)
@@ -157,10 +158,12 @@ class EndlessService : Service() {
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
 
         // Средний ток батареи в микроамперах, как целое число.
+        // То ли в infinix, то ли в android 13 в значение выдается миллиамперах
         val currentAverage = batteryManager
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
 
         // Мгновенный ток батареи в микроамперах, как целое число.
+
         val currentNow = batteryManager
             .getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
 
@@ -227,7 +230,7 @@ class EndlessService : Service() {
         }
 
         val pendingIntent: PendingIntent = Intent(this, MainActivity::class.java).let { notificationIntent ->
-            PendingIntent.getActivity(this, 0, notificationIntent, 0)
+            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
         }
 
         val builder: Notification.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(

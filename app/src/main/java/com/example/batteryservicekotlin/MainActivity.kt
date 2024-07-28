@@ -1,16 +1,18 @@
 package com.example.batteryservicekotlin
 
+import android.app.Activity
+import android.app.PendingIntent
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.anychart.AnyChart
 import com.anychart.chart.common.dataentry.DataEntry
 import com.anychart.chart.common.dataentry.ValueDataEntry
@@ -21,33 +23,38 @@ import com.example.batteryservicekotlin.service.Actions
 import com.example.batteryservicekotlin.service.EndlessService
 import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
+import com.example.batteryservicekotlin.settingActivity.SettingActivity
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileWriter
+import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 
 /** РЕШЕНО
  *  Пока что не получается сделать запрос и получить ответ единожды.
  * Я могу только подписаться на LiveData c помощью Observer.
- * Поэтому пока напишем то что можно но более менее чисто.
+ * Поэтому пока напишем то что можно, но более менее чисто.
  * Итого в данный момент делаем так.
- * При открытии подргужаем данные сегоднящнего дня. Отражаем это где нибудь.
- * При выборе даты делаем запрос с новым промежуктом времени.
- * Все полученные данные не должны автоматически обновляться, поэтому надоэ
+ * При открытии подгружаем данные сегодняшнего дня. Отражаем это где-нибудь.
+ * При выборе даты делаем запрос с новым промежутком времени.
+ * Все полученные данные не должны автоматически обновляться, поэтому надо
  * сделать флажок который после ответа от бд будет закрывать обновление.
- * При работ с данными одного дня работаем уже без запросов к БД, только с тем что уже подгружено.
+ * При работе с данными одного дня работаем уже без запросов к БД, только с тем что уже подгружено.
  * РЕШЕНО
  *
- * Нужно сделать чтобы при подгрузке отрисовывался полный график сегодняшнего дня
+ * Нужно сделать чтобы при подгрузке отрисовывался полный график сегодняшнего дня.
  */
 
 
 class MainActivity : AppCompatActivity() {
-    private val stepSlider = 0.2F // Шаг слайдера
+    //private val stepSlider = 0.2F // Шаг слайдера
 
     private lateinit var datePicker: MaterialDatePicker<Long>    // Выбор даты. (Material Date Picker)
 
@@ -72,13 +79,90 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
+        buttonFull.setOnClickListener {
+            GlobalScope.launch(Dispatchers.Unconfined) {
+                log("Start count.")
+                val count = mainViewModel.getCount()
+                log("Count: $count")
+
+                val countOffset = count / 100000
+
+                var counter = 0
+                for (i in 0..countOffset) {
+                    val a = mainViewModel.getLimit(i * 100000)
+                    val file = File(filesDir, "testFile.txt")
+                    val csvWriter = FileWriter(file, true)
+                    a.forEach {
+                        counter += 1
+                        log("$counter из $count")
+                        csvWriter.write(
+                            "${it.id}," +
+                                    "${it.date.time}," +
+                                    "${it.capacityInMicroampereHours}," +
+                                    "${it.capacityInPercentage}," +
+                                    "${it.currentAverage}," +
+                                    "${it.currentNow},${it.temperature},${it.voltage}\n")
+                    }
+                    csvWriter.close()
+                }
+            }
+
+        }
+
+        button_start.setOnClickListener {
+            val file = File(filesDir, "testFile.txt")
+            val fileUri: Uri? = try {
+                FileProvider.getUriForFile(
+                    this@MainActivity,
+                    "com.example.batteryservicekotlin.fileprovider",
+                    file
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            intent.putExtra(Intent.EXTRA_STREAM, fileUri)
+            intent.type = "text/plain"
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(Intent.createChooser(intent, "Share file:"))
+        }
+
+        button_stop.setOnClickListener {
+            val file = File(filesDir, "testFile.txt")
+            file.delete()
+        }
+
+        disEnableButtons()
+
         chosenDay = Calendar.getInstance()
 
-        actionOnService(Actions.START) // Запуск службы при запуске приложения
+        if (mainViewModel.getAutostartService()) {
+            actionOnService(Actions.START) // Запуск службы при запуске приложения
+        }
 
         init() // Инициализация виджетов
 
         getDataFromDB(startChosenDay(chosenDay).timeInMillis, endChosenDay(chosenDay).timeInMillis) // Запрос данных БД сегодняшнего дня
+    }
+
+    private fun disEnableButtons() {
+        buttonStartPrev.isEnabled = false
+        buttonEndPrev.isEnabled = false
+        buttonStartNext.isEnabled = false
+        buttonEndNext.isEnabled = false
+        slider.isEnabled = false
+    }
+
+    private fun enableButtons() {
+        buttonStartPrev.isEnabled = true
+        buttonEndPrev.isEnabled = true
+        buttonStartNext.isEnabled = true
+        buttonEndNext.isEnabled = true
+        slider.isEnabled = true
     }
 
     // Запрос данных БД выбранного промежутка времени
@@ -91,6 +175,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Данные получены", Toast.LENGTH_SHORT).show()
                 log("Размер: ${chosenListUnits.size}")
 
+                enableButtons()
 //                // Обновление графика в текущем отрезке
 //                if (flagRefresh) {
 //                    flagRefresh = false
@@ -178,6 +263,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun chosenGraphTest(list: ArrayList<Unit>) {
+        if (list.size == 0) {
+            Toast.makeText(this, "Выход за пределы диапазона", Toast.LENGTH_SHORT).show()
+            return
+        }
         val dataCurrentNow = arrayListOf<DataEntry>()
         val dataCurrentAverage = arrayListOf<DataEntry>()
         val dataTemperature = arrayListOf<DataEntry>()
@@ -185,14 +274,66 @@ class MainActivity : AppCompatActivity() {
         val dataCapacityInMicroamperesHours = arrayListOf<DataEntry>()
         val dataCapacityInPercentage = arrayListOf<DataEntry>()
 
+        // Здесь будем хранить суммарную емкость
+        val dataCapacitySum = arrayListOf<DataEntry>()
+        // Здесь у нас уже есть отфильтрованный ток. Здесь нужно сформировать график суммарной емкости.
+        // Добавляем первую точку с нулевой емкостью.
+        val timeFirstPointCapacitySum = timeInHours(list[0].date)
+        val valueFirstPointCapacitySum = 0
+        dataCapacitySum.add(ValueDataEntry(timeFirstPointCapacitySum, valueFirstPointCapacitySum))
+        var sumCapacity = 0.0
+
         list.forEach { unit ->
-            dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow))
-            dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
+            // 1 - сдвоенная батарея
+            // 2 - инверсия значения тока
+            if (mainViewModel.getDoubleBattery() && mainViewModel.getInversionCurrent()) {                  // 1 и 2
+                dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), - unit.currentNow * 2))
+            } else if (mainViewModel.getDoubleBattery() && !mainViewModel.getInversionCurrent()) {          // Только 1
+                dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow * 2))
+            } else if (!mainViewModel.getDoubleBattery() && mainViewModel.getInversionCurrent()) {          // Только 2
+                dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), - unit.currentNow))
+            } else if (!mainViewModel.getDoubleBattery() && !mainViewModel.getInversionCurrent()) {         // Ни то, ни другое
+                if (mainViewModel.getCurrentCorrect()) {
+                    dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow / 1000))
+                } else {
+                    dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow))
+                }
+            }
+
+            // Условие для учета сдвоенной батареи
+            if (mainViewModel.getDoubleBattery()) {
+                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage * 2))
+            } else {
+                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
+            }
+
+
+
+
             dataTemperature.add(ValueDataEntry(timeInHours(unit.date), unit.temperature!!))
             dataVoltage.add(ValueDataEntry(timeInHours(unit.date), unit.voltage!! / 10.0))
             dataCapacityInMicroamperesHours.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInMicroampereHours / 3000.0))
             dataCapacityInPercentage.add(ValueDataEntry(timeInHours(unit.date), unit.capacityInPercentage * 13))
+
+            //sumCapacity += unit.currentAverage
+            //dataCapacitySum.add(ValueDataEntry(timeInHours(unit.date), sumCapacity))
+            //log("$sumCapacity")
+            // Неправильно считаю. Я просто складываю ток, а надо считать емкость и складывать емкость.
         }
+
+        list.forEachIndexed { index, unit ->
+            if (index > 0) {
+                val current = list[index - 1].currentAverage
+                val time = timeInHours(list[index].date) - timeInHours(list[index - 1].date)
+                val capacity = current * time
+                sumCapacity += capacity
+                dataCapacitySum.add(ValueDataEntry(timeInHours(unit.date), sumCapacity/1000))
+                log("$sumCapacity")
+            }
+        }
+
+
+
 
         chart.run {
             if(checkBoxCurrentNow.isChecked) {
@@ -213,6 +354,10 @@ class MainActivity : AppCompatActivity() {
             if(checkBoxCapacityInPercentage.isChecked) {
                 line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
             }
+            if(checkBoxCapacitySum.isChecked) {
+                line(dataCapacitySum).stroke("0.2 black").name("Сум.емк.")
+            }
+
         }
     }
 
@@ -247,11 +392,11 @@ class MainActivity : AppCompatActivity() {
             }
         })
         slider.addOnChangeListener { slider, value, fromUser ->
-            chart.removeAllSeries()
-            chosenGraphTest(filteredList(
-                chosenListUnits,
-                sliderStartInCalendar(slider, chosenDay),
-                sliderEndInCalendar(slider, chosenDay)))
+//            chart.removeAllSeries()
+//            chosenGraphTest(filteredList(
+//                chosenListUnits,
+//                sliderStartInCalendar(slider, chosenDay),
+//                sliderEndInCalendar(slider, chosenDay)))
         }
     }
 
@@ -260,27 +405,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initButtons() {
-        button_start.setOnClickListener {
-            actionOnService(Actions.START)
+
+        buttonSettings.setOnClickListener {
+            val intent = Intent(this, SettingActivity::class.java)
+            startActivity(intent)
         }
 
-        button_stop.setOnClickListener {
-            actionOnService(Actions.STOP)
-        }
+//        button_start.setOnClickListener {
+//            actionOnService(Actions.START)
+//        }
+//
+//        button_stop.setOnClickListener {
+//            actionOnService(Actions.STOP)
+//        }
 
-        buttonFull.setOnClickListener {
-            chart.removeAllSeries()
-            fullGraph()
-        }
+//        buttonFull.setOnClickListener {
+//            chart.removeAllSeries()
+//            fullGraph()
+//        }
 
-        buttonRefresh.setOnClickListener {
-            flag = true
-            flagRefresh = true
-        }
+//        buttonRefresh.setOnClickListener {
+//            flag = true
+//            flagRefresh = true
+//        }
 
-        buttonRemove.setOnClickListener {
-            chart.removeAllSeries()
-        }
+//        buttonRemove.setOnClickListener {
+//            chart.removeAllSeries()
+//        }
 
         val calendar = Calendar.getInstance()
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
@@ -291,6 +442,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonNextDate.setOnClickListener {
+
+            disEnableButtons()
+
             chosenDay.timeInMillis = chosenDay.timeInMillis + 24 * 60 * 60 * 1000
             if(chosenDayLiveData.hasObservers()) {
                 chosenDayLiveData.removeObserver(batteryObserver)
@@ -304,6 +458,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonPreviousDate.setOnClickListener {
+
+            disEnableButtons()
+            
             chosenDay.timeInMillis = chosenDay.timeInMillis - 24 * 60 * 60 * 1000
             if(chosenDayLiveData.hasObservers()) {
                 chosenDayLiveData.removeObserver(batteryObserver)
@@ -316,58 +473,83 @@ class MainActivity : AppCompatActivity() {
             button_date.text = sdf.format(chosenDay.time)
         }
 
-        buttonStartWorker.setOnClickListener {
-            val myWorkRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES).build()
-            WorkManager.getInstance(this).enqueue(myWorkRequest)
-        }
-
-        buttonStopWorker.setOnClickListener {
-            WorkManager.getInstance(this).cancelAllWork()
-            WorkManager.getInstance(this).pruneWork()
-        }
+        // Управление перенесено в окно настроек
+//        buttonStartWorker.setOnClickListener {
+//            val myWorkRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES).build()
+//            WorkManager.getInstance(this).enqueue(myWorkRequest)
+//        }
+//
+//        buttonStopWorker.setOnClickListener {
+//            WorkManager.getInstance(this).cancelAllWork()
+//            WorkManager.getInstance(this).pruneWork()
+//        }
 
         buttonStartPrev.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val newStartThumbValue = slider.values[0] - stepSlider  // Значение ползунка начала
+            val newStartThumbValue = slider.values[0] - mainViewModel.getStepRange()  // Значение ползунка начала
             val endThumbValue = slider.values[1]                    // Значение ползунка конца
-            if (newStartThumbValue < 0) return@setOnClickListener   // Проверяем не выйдет ли сладер за 0, если выходит, то прерываем выполнение
+            if (newStartThumbValue < 0) return@setOnClickListener   // Проверяем не выйдет ли слайдер за 0, если выходит, то прерываем выполнение
             list.add(newStartThumbValue)                            // Добавляем в массив с величинами слайдера измененное значение первого ползунка
             list.add(endThumbValue)                                 // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
             slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+
+            chart.removeAllSeries()
+            chosenGraphTest(filteredList(
+                chosenListUnits,
+                sliderStartInCalendar(slider, chosenDay),
+                sliderEndInCalendar(slider, chosenDay)))
         }
 
         buttonStartNext.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val newStartThumbValue = slider.values[0] + stepSlider                          // Новое значение ползунка начала
+            val newStartThumbValue = slider.values[0] + mainViewModel.getStepRange()                          // Новое значение ползунка начала
             val endThumbValue = slider.values[1]                                            // Значение ползунка конца
-            if (endThumbValue - newStartThumbValue < stepSlider) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
+            if (endThumbValue - newStartThumbValue < mainViewModel.getStepRange()) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
             list.add(newStartThumbValue)                                                    // Добавляем в массив с величинами слайдера измененное значение первого ползунка
             list.add(endThumbValue)                                                         // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
             slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+
+            chart.removeAllSeries()
+            chosenGraphTest(filteredList(
+                chosenListUnits,
+                sliderStartInCalendar(slider, chosenDay),
+                sliderEndInCalendar(slider, chosenDay)))
         }
 
         buttonEndPrev.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
             val startThumbValue = slider.values[0]                                          // Значение ползунка начала
-            val newEndThumbValue = slider.values[1] - stepSlider                            // Новое значение ползунка конца
-            if (newEndThumbValue - startThumbValue < stepSlider) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
+            val newEndThumbValue = slider.values[1] - mainViewModel.getStepRange()                            // Новое значение ползунка конца
+            if (newEndThumbValue - startThumbValue < mainViewModel.getStepRange()) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
             list.add(startThumbValue)                                                       // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
             list.add(newEndThumbValue)                                                      // Добавляем в массив с величинами слайдера измененное значение второго ползунка
             slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+
+            chart.removeAllSeries()
+            chosenGraphTest(filteredList(
+                chosenListUnits,
+                sliderStartInCalendar(slider, chosenDay),
+                sliderEndInCalendar(slider, chosenDay)))
         }
 
         buttonEndNext.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
             val startThumbValue = slider.values[0]                  // Значение ползунка начала
-            val newEndThumbValue = slider.values[1] + stepSlider    // Новое значение ползунка конца
+            val newEndThumbValue = slider.values[1] + mainViewModel.getStepRange()    // Новое значение ползунка конца
             if (newEndThumbValue > 24) return@setOnClickListener    // Проверяем не выйдет ли слайдер за максимальное значение, если выйдет, то прерываем выполнение
             list.add(startThumbValue)                               // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
             list.add(newEndThumbValue)                              // Добавляем в массив с величинами слайдера измененное значение второго ползунка
             slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+
+            chart.removeAllSeries()
+            chosenGraphTest(filteredList(
+                chosenListUnits,
+                sliderStartInCalendar(slider, chosenDay),
+                sliderEndInCalendar(slider, chosenDay)))
         }
     }
 
@@ -400,7 +582,7 @@ class MainActivity : AppCompatActivity() {
         chart.yAxis(0).enabled(false)
         //chart.legend().enabled(true)
 
-        // Настройка отображения времени в всплывающей подсказке
+        // Настройка отображения времени во всплывающей подсказке
         chart.tooltip().titleFormat("function() {\n" +
                 "var hours = Math.trunc(this.x);\n" +
                 "var minutes = Math.trunc((this.x - hours) * 60);\n" +
@@ -409,7 +591,7 @@ class MainActivity : AppCompatActivity() {
                 "\n" +
                 "}")
 
-        // Настройка отображения величин "х" в вспывающей подсказке
+        // Настройка отображения величин "х" во всплывающей подсказке
         chart
             .tooltip()
             .format("function() {\n" +
@@ -425,6 +607,8 @@ class MainActivity : AppCompatActivity() {
                     "return this.seriesName + ': ' + (Number(this.value)* 3).toFixed(0) + ' мА\u00B7ч';"+
                     "} else if (this.seriesName == 'Емк.%(ц)') {"+
                     "return this.seriesName + ': ' + (Number(this.value)/ 13).toFixed(0) + ' \u0025';"+
+                    "} else if (this.seriesName == 'Сум.емк.') {"+
+                    "return this.seriesName + ': ' + (Number(this.value)).toFixed(0) + ' мАч';"+
                     "}"+
                     "\n" +
                     "}")
@@ -438,12 +622,14 @@ class MainActivity : AppCompatActivity() {
     private fun actionOnService(action: Actions) {
         if (getServiceState(this) == ServiceState.STOPPED && action == Actions.STOP) return
         Intent(this, EndlessService::class.java).also {
+            //it.addFlags(PendingIntent.FLAG_IMMUTABLE)
             it.action = action.name
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 //log("Starting the service in >=26 Mode")
                 startForegroundService(it)
                 return
             }
+
             //log("Starting the service in < 26 Mode")
             startService(it)
         }

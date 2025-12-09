@@ -13,18 +13,21 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.example.batteryservicekotlin.MyWorker
 import com.example.batteryservicekotlin.R
+import com.example.batteryservicekotlin.databinding.ActivitySettingBinding
 import com.example.batteryservicekotlin.log
 import com.example.batteryservicekotlin.service.Actions
 import com.example.batteryservicekotlin.service.EndlessService
 import com.example.batteryservicekotlin.service.ServiceState
 import com.example.batteryservicekotlin.service.getServiceState
-import kotlinx.android.synthetic.main.activity_setting.*
+//import kotlinx.android.synthetic.main.activity_setting.*
 import java.util.concurrent.TimeUnit
 
 
 private const val WORK_TAG = "work tag"
 
 class SettingActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivitySettingBinding
 
     private lateinit var workerObserver: Observer<List<WorkInfo>>
 
@@ -34,59 +37,62 @@ class SettingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setting)
+
+        binding = ActivitySettingBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         if (settingActivityViewModel.getCurrentCorrect()) {
-            buttonCurrentCorrectOn.isEnabled = false
-            buttonCurrentCorrectOff.isEnabled = true
+            binding.buttonCurrentCorrectOn.isEnabled = false
+            binding.buttonCurrentCorrectOff.isEnabled = true
         } else {
-            buttonCurrentCorrectOn.isEnabled = true
-            buttonCurrentCorrectOff.isEnabled = false
+            binding.buttonCurrentCorrectOn.isEnabled = true
+            binding.buttonCurrentCorrectOff.isEnabled = false
         }
 
         if (settingActivityViewModel.getAutostartService()) {
-            buttonAutoStartServiceOn.isEnabled = false
-            buttonAutoStartServiceOff.isEnabled = true
+            binding.buttonAutoStartServiceOn.isEnabled = false
+            binding.buttonAutoStartServiceOff.isEnabled = true
         } else {
-            buttonAutoStartServiceOn.isEnabled = true
-            buttonAutoStartServiceOff.isEnabled = false
+            binding.buttonAutoStartServiceOn.isEnabled = true
+            binding.buttonAutoStartServiceOff.isEnabled = false
         }
 
         if(settingActivityViewModel.getTestRestartService()) {
-            buttonTestRestartOn.isEnabled = false
-            buttonTestRestartOff.isEnabled = true
+            binding.buttonTestRestartOn.isEnabled = false
+            binding.buttonTestRestartOff.isEnabled = true
         } else {
-            buttonTestRestartOn.isEnabled = true
-            buttonTestRestartOff.isEnabled = false
+            binding.buttonTestRestartOn.isEnabled = true
+            binding.buttonTestRestartOff.isEnabled = false
         }
 
         if(settingActivityViewModel.getDoubleBattery()) {
-            buttonDoubleBatteryOn.isEnabled = false
-            buttonDoubleBatteryOff.isEnabled = true
+            binding.buttonDoubleBatteryOn.isEnabled = false
+            binding.buttonDoubleBatteryOff.isEnabled = true
         } else {
-            buttonDoubleBatteryOn.isEnabled = true
-            buttonDoubleBatteryOff.isEnabled = false
+            binding.buttonDoubleBatteryOn.isEnabled = true
+            binding.buttonDoubleBatteryOff.isEnabled = false
         }
 
         if(settingActivityViewModel.getInversionCurrent()) {
-            buttonInversionOn.isEnabled = false
-            buttonInversionOff.isEnabled = true
+            binding.buttonInversionOn.isEnabled = false
+            binding.buttonInversionOff.isEnabled = true
         } else {
-            buttonInversionOn.isEnabled = true
-            buttonInversionOff.isEnabled = false
+            binding.buttonInversionOn.isEnabled = true
+            binding.buttonInversionOff.isEnabled = false
         }
 
 
-        buttonServiceStart.setOnClickListener {
+        binding.buttonServiceStart.setOnClickListener {
             actionOnService(Actions.START)
         }
 
-        buttonServiceStop.setOnClickListener {
+        binding.buttonServiceStop.setOnClickListener {
             actionOnService(Actions.STOP)
         }
 
-        switch2.setOnClickListener {
-            if (switch2.isChecked) {
+        binding.switch2.setOnClickListener {
+            if (binding.switch2.isChecked) {
                 val myWorkRequest = PeriodicWorkRequestBuilder<MyWorker>(15, TimeUnit.MINUTES)
                     .addTag(WORK_TAG)
                     .build()
@@ -104,92 +110,92 @@ class SettingActivity : AppCompatActivity() {
 //
 //        }
 
-        buttonAutoStartServiceOn.setOnClickListener {
+        binding.buttonAutoStartServiceOn.setOnClickListener {
             settingActivityViewModel.setAutostartService(true)
-            buttonAutoStartServiceOn.isEnabled = false
-            buttonAutoStartServiceOff.isEnabled = true
+            binding.buttonAutoStartServiceOn.isEnabled = false
+            binding.buttonAutoStartServiceOff.isEnabled = true
         }
 
-        buttonAutoStartServiceOff.setOnClickListener {
+        binding.buttonAutoStartServiceOff.setOnClickListener {
             settingActivityViewModel.setAutostartService(false)
-            buttonAutoStartServiceOn.isEnabled = true
-            buttonAutoStartServiceOff.isEnabled = false
+            binding.buttonAutoStartServiceOn.isEnabled = true
+            binding.buttonAutoStartServiceOff.isEnabled = false
         }
 
-        buttonTestRestartOn.setOnClickListener {
+        binding.buttonTestRestartOn.setOnClickListener {
             settingActivityViewModel.setTestRestartService(true)
-            buttonTestRestartOn.isEnabled = false
-            buttonTestRestartOff.isEnabled = true
+            binding.buttonTestRestartOn.isEnabled = false
+            binding.buttonTestRestartOff.isEnabled = true
         }
 
-        buttonTestRestartOff.setOnClickListener {
+        binding.buttonTestRestartOff.setOnClickListener {
             settingActivityViewModel.setTestRestartService(false)
-            buttonTestRestartOn.isEnabled = true
-            buttonTestRestartOff.isEnabled = false
+            binding.buttonTestRestartOn.isEnabled = true
+            binding.buttonTestRestartOff.isEnabled = false
         }
 
-        textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
+        binding.textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
         val step = settingActivityViewModel.getStepRange()
         if (step == 0.3F) {
-            buttonStepPlus.isEnabled = false
-            buttonStepMinus.isEnabled = true
+            binding.buttonStepPlus.isEnabled = false
+            binding.buttonStepMinus.isEnabled = true
         } else if (step < 0.06F) {
-            buttonStepPlus.isEnabled = true
-            buttonStepMinus.isEnabled = false
+            binding.buttonStepPlus.isEnabled = true
+            binding.buttonStepMinus.isEnabled = false
         } else {
-            buttonStepPlus.isEnabled = true
-            buttonStepMinus.isEnabled = true
+            binding.buttonStepPlus.isEnabled = true
+            binding.buttonStepMinus.isEnabled = true
         }
 
-        buttonStepPlus.setOnClickListener {
+        binding.buttonStepPlus.setOnClickListener {
             val newStep = settingActivityViewModel.getStepRange() + 0.05F
             settingActivityViewModel.setStepRange(newStep)
-            if (newStep == 0.3F) buttonStepPlus.isEnabled = false
-            if (newStep > 0.06F) buttonStepMinus.isEnabled = true
-            textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
+            if (newStep == 0.3F) binding.buttonStepPlus.isEnabled = false
+            if (newStep > 0.06F) binding.buttonStepMinus.isEnabled = true
+            binding.textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
         }
 
-        buttonStepMinus.setOnClickListener {
+        binding.buttonStepMinus.setOnClickListener {
             val newStep = settingActivityViewModel.getStepRange() - 0.05F
             settingActivityViewModel.setStepRange(newStep)
-            if (newStep < 0.06F) buttonStepMinus.isEnabled = false
-            if (newStep < 0.3F) buttonStepPlus.isEnabled = true
-            textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
+            if (newStep < 0.06F) binding.buttonStepMinus.isEnabled = false
+            if (newStep < 0.3F) binding.buttonStepPlus.isEnabled = true
+            binding.textViewStep.text = String.format("%.2f", settingActivityViewModel.getStepRange())
         }
 
-        buttonDoubleBatteryOn.setOnClickListener {
+        binding.buttonDoubleBatteryOn.setOnClickListener {
             settingActivityViewModel.setDoubleBattery(true)
-            buttonDoubleBatteryOn.isEnabled = false
-            buttonDoubleBatteryOff.isEnabled = true
+            binding.buttonDoubleBatteryOn.isEnabled = false
+            binding.buttonDoubleBatteryOff.isEnabled = true
         }
 
-        buttonDoubleBatteryOff.setOnClickListener {
+        binding.buttonDoubleBatteryOff.setOnClickListener {
             settingActivityViewModel.setDoubleBattery(false)
-            buttonDoubleBatteryOff.isEnabled = false
-            buttonDoubleBatteryOn.isEnabled = true
+            binding.buttonDoubleBatteryOff.isEnabled = false
+            binding.buttonDoubleBatteryOn.isEnabled = true
         }
 
-        buttonInversionOn.setOnClickListener {
+        binding.buttonInversionOn.setOnClickListener {
             settingActivityViewModel.setInversionCurrent(true)
-            buttonInversionOn.isEnabled = false
-            buttonInversionOff.isEnabled = true
+            binding.buttonInversionOn.isEnabled = false
+            binding.buttonInversionOff.isEnabled = true
         }
 
-        buttonInversionOff.setOnClickListener {
+        binding.buttonInversionOff.setOnClickListener {
             settingActivityViewModel.setInversionCurrent(false)
-            buttonInversionOn.isEnabled = true
-            buttonInversionOff.isEnabled = false
+            binding.buttonInversionOn.isEnabled = true
+            binding.buttonInversionOff.isEnabled = false
         }
 
-        buttonCurrentCorrectOn.setOnClickListener {
+        binding.buttonCurrentCorrectOn.setOnClickListener {
             settingActivityViewModel.setCurrentCorrect(true)
-            buttonCurrentCorrectOn.isEnabled = false
-            buttonCurrentCorrectOff.isEnabled = true
+            binding.buttonCurrentCorrectOn.isEnabled = false
+            binding.buttonCurrentCorrectOff.isEnabled = true
         }
-        buttonCurrentCorrectOff.setOnClickListener {
+        binding.buttonCurrentCorrectOff.setOnClickListener {
             settingActivityViewModel.setCurrentCorrect(false)
-            buttonCurrentCorrectOn.isEnabled = true
-            buttonCurrentCorrectOff.isEnabled = false
+            binding.buttonCurrentCorrectOn.isEnabled = true
+            binding.buttonCurrentCorrectOff.isEnabled = false
         }
 
 
@@ -199,7 +205,7 @@ class SettingActivity : AppCompatActivity() {
             //textView.text = "Кол-во: ${it.size}\n"
             log("Кол-во: ${it.size}\n")
 
-            switch2.isChecked = it.isNotEmpty()
+            binding.switch2.isChecked = it.isNotEmpty()
 
             it.forEach { workInfo ->
                 //textView.append("\n${workInfo.id}\n${workInfo.outputData}\n${workInfo.progress}\n${workInfo.state}\n${workInfo.runAttemptCount}\n${workInfo.tags}\n")
@@ -218,7 +224,7 @@ class SettingActivity : AppCompatActivity() {
         val am = this.getSystemService(ACTIVITY_SERVICE) as ActivityManager
         val rs = am.getRunningServices(50)
         log("Кол-во сервисов: ${rs.size}")
-        textViewState.append(" ${rs.size}")
+        binding.textViewState.append(" ${rs.size}")
         rs.forEach {
         }
         for (i in rs.indices) {

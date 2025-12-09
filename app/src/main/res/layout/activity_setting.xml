@@ -362,7 +362,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:text="Для Infinix или    Android 13"
+        android:text="Деление тока на 1000"
         android:textColor="@color/white"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/button6"

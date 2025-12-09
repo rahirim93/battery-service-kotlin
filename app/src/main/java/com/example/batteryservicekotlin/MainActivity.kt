@@ -19,6 +19,7 @@ import com.anychart.chart.common.dataentry.ValueDataEntry
 import com.anychart.charts.Cartesian
 import com.anychart.enums.ScaleTypes
 import com.example.batteryservicekotlin.database.Unit
+import com.example.batteryservicekotlin.databinding.ActivityMainBinding
 import com.example.batteryservicekotlin.service.Actions
 import com.example.batteryservicekotlin.service.EndlessService
 import com.example.batteryservicekotlin.service.ServiceState
@@ -26,7 +27,7 @@ import com.example.batteryservicekotlin.service.getServiceState
 import com.example.batteryservicekotlin.settingActivity.SettingActivity
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.RangeSlider
-import kotlinx.android.synthetic.main.activity_main.*
+//import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -56,6 +57,8 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     //private val stepSlider = 0.2F // Шаг слайдера
 
+    private lateinit var binding: ActivityMainBinding
+
     private lateinit var datePicker: MaterialDatePicker<Long>    // Выбор даты. (Material Date Picker)
 
     private lateinit var chosenDay: Calendar // Выбранный день
@@ -77,10 +80,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
-        buttonFull.setOnClickListener {
+        binding.buttonFull.setOnClickListener {
             GlobalScope.launch(Dispatchers.Unconfined) {
                 log("Start count.")
                 val count = mainViewModel.getCount()
@@ -110,7 +115,7 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        button_start.setOnClickListener {
+            binding.buttonStart.setOnClickListener {
             val file = File(filesDir, "testFile.txt")
             val fileUri: Uri? = try {
                 FileProvider.getUriForFile(
@@ -131,7 +136,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent.createChooser(intent, "Share file:"))
         }
 
-        button_stop.setOnClickListener {
+        binding.buttonStop.setOnClickListener {
             val file = File(filesDir, "testFile.txt")
             file.delete()
         }
@@ -150,19 +155,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun disEnableButtons() {
-        buttonStartPrev.isEnabled = false
-        buttonEndPrev.isEnabled = false
-        buttonStartNext.isEnabled = false
-        buttonEndNext.isEnabled = false
-        slider.isEnabled = false
+        binding.buttonStartPrev.isEnabled = false
+        binding.buttonEndPrev.isEnabled = false
+        binding.buttonStartNext.isEnabled = false
+        binding.buttonEndNext.isEnabled = false
+        binding.slider.isEnabled = false
     }
 
     private fun enableButtons() {
-        buttonStartPrev.isEnabled = true
-        buttonEndPrev.isEnabled = true
-        buttonStartNext.isEnabled = true
-        buttonEndNext.isEnabled = true
-        slider.isEnabled = true
+        binding.buttonStartPrev.isEnabled = true
+        binding.buttonEndPrev.isEnabled = true
+        binding.buttonStartNext.isEnabled = true
+        binding.buttonEndNext.isEnabled = true
+        binding.slider.isEnabled = true
     }
 
     // Запрос данных БД выбранного промежутка времени
@@ -241,22 +246,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         chart.run {
-            if(checkBoxCurrentNow.isChecked) {
+            if(binding.checkBoxCurrentNow.isChecked) {
                 line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
             }
-            if(checkBoxCurrentAverage.isChecked) {
+            if(binding.checkBoxCurrentAverage.isChecked) {
                 line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
             }
-            if(checkBoxTemperature.isChecked) {
+            if(binding.checkBoxTemperature.isChecked) {
                 line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
             }
-            if(checkBoxVoltage.isChecked) {
+            if(binding.checkBoxVoltage.isChecked) {
                 line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
             }
-            if(checkBoxCapacityInMicroamperesHours.isChecked) {
+            if(binding.checkBoxCapacityInMicroamperesHours.isChecked) {
                 line(dataCapacityInMicroamperesHours).stroke("0.2 purple").name("Емк.мач(ф)")
             }
-            if(checkBoxCapacityInPercentage.isChecked) {
+            if(binding.checkBoxCapacityInPercentage.isChecked) {
                 line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
             }
         }
@@ -295,17 +300,19 @@ class MainActivity : AppCompatActivity() {
             } else if (!mainViewModel.getDoubleBattery() && !mainViewModel.getInversionCurrent()) {         // Ни то, ни другое
                 if (mainViewModel.getCurrentCorrect()) {
                     dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow / 1000))
+                    dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage / 1000))
                 } else {
                     dataCurrentNow.add(ValueDataEntry(timeInHours(unit.date), unit.currentNow))
+                    dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
                 }
             }
 
             // Условие для учета сдвоенной батареи
-            if (mainViewModel.getDoubleBattery()) {
-                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage * 2))
-            } else {
-                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
-            }
+//            if (mainViewModel.getDoubleBattery()) {
+//                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage * 2))
+//            } else {
+//                dataCurrentAverage.add(ValueDataEntry(timeInHours(unit.date), unit.currentAverage))
+//            }
 
 
 
@@ -336,25 +343,25 @@ class MainActivity : AppCompatActivity() {
 
 
         chart.run {
-            if(checkBoxCurrentNow.isChecked) {
+            if(binding.checkBoxCurrentNow.isChecked) {
                 line(dataCurrentNow).stroke("0.2 black").name("Тек.ток(ч)")
             }
-            if(checkBoxCurrentAverage.isChecked) {
+            if(binding.checkBoxCurrentAverage.isChecked) {
                 line(dataCurrentAverage).stroke("0.2 red").name("Ср.ток(к)")
             }
-            if(checkBoxTemperature.isChecked) {
+            if(binding.checkBoxTemperature.isChecked) {
                 line(dataTemperature).stroke("0.2 blue").name("Темп.(г)")
             }
-            if(checkBoxVoltage.isChecked) {
+            if(binding.checkBoxVoltage.isChecked) {
                 line(dataVoltage).stroke("0.2 green").name("Напр.(з)")
             }
-            if(checkBoxCapacityInMicroamperesHours.isChecked) {
+            if(binding.checkBoxCapacityInMicroamperesHours.isChecked) {
                 line(dataCapacityInMicroamperesHours).stroke("0.2 purple").name("Емк.мач(ф)")
             }
-            if(checkBoxCapacityInPercentage.isChecked) {
+            if(binding.checkBoxCapacityInPercentage.isChecked) {
                 line(dataCapacityInPercentage).stroke("0.2 cyan").name("Емк.%(ц)")
             }
-            if(checkBoxCapacitySum.isChecked) {
+            if(binding.checkBoxCapacitySum.isChecked) {
                 line(dataCapacitySum).stroke("0.2 black").name("Сум.емк.")
             }
 
@@ -378,7 +385,7 @@ class MainActivity : AppCompatActivity() {
         initCheckBoxes()
 
 
-        slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
+        binding.slider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener{
             override fun onStartTrackingTouch(slider: RangeSlider) {
 
             }
@@ -391,7 +398,7 @@ class MainActivity : AppCompatActivity() {
                     sliderEndInCalendar(slider, chosenDay)))
             }
         })
-        slider.addOnChangeListener { slider, value, fromUser ->
+        binding.slider.addOnChangeListener { slider, value, fromUser ->
 //            chart.removeAllSeries()
 //            chosenGraphTest(filteredList(
 //                chosenListUnits,
@@ -406,7 +413,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initButtons() {
 
-        buttonSettings.setOnClickListener {
+        binding.buttonSettings.setOnClickListener {
             val intent = Intent(this, SettingActivity::class.java)
             startActivity(intent)
         }
@@ -435,13 +442,13 @@ class MainActivity : AppCompatActivity() {
 
         val calendar = Calendar.getInstance()
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        button_date.text = sdf.format(calendar.time)
-        button_date.setOnClickListener {
+        binding.buttonDate.text = sdf.format(calendar.time)
+        binding.buttonDate.setOnClickListener {
             datePicker.show(supportFragmentManager, "datePicker")
             //datePicker.
         }
 
-        buttonNextDate.setOnClickListener {
+        binding.buttonNextDate.setOnClickListener {
 
             disEnableButtons()
 
@@ -454,10 +461,10 @@ class MainActivity : AppCompatActivity() {
                 chosenDayLiveData.observe(this, batteryObserver)
             }
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            button_date.text = sdf.format(chosenDay.time)
+            binding.buttonDate.text = sdf.format(chosenDay.time)
         }
 
-        buttonPreviousDate.setOnClickListener {
+        binding.buttonPreviousDate.setOnClickListener {
 
             disEnableButtons()
             
@@ -470,7 +477,7 @@ class MainActivity : AppCompatActivity() {
                 chosenDayLiveData.observe(this, batteryObserver)
             }
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            button_date.text = sdf.format(chosenDay.time)
+            binding.buttonDate.text = sdf.format(chosenDay.time)
         }
 
         // Управление перенесено в окно настроек
@@ -484,72 +491,72 @@ class MainActivity : AppCompatActivity() {
 //            WorkManager.getInstance(this).pruneWork()
 //        }
 
-        buttonStartPrev.setOnClickListener {
+        binding.buttonStartPrev.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val newStartThumbValue = slider.values[0] - mainViewModel.getStepRange()  // Значение ползунка начала
-            val endThumbValue = slider.values[1]                    // Значение ползунка конца
+            val newStartThumbValue = binding.slider.values[0] - mainViewModel.getStepRange()  // Значение ползунка начала
+            val endThumbValue = binding.slider.values[1]                    // Значение ползунка конца
             if (newStartThumbValue < 0) return@setOnClickListener   // Проверяем не выйдет ли слайдер за 0, если выходит, то прерываем выполнение
             list.add(newStartThumbValue)                            // Добавляем в массив с величинами слайдера измененное значение первого ползунка
             list.add(endThumbValue)                                 // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
-            slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+            binding.slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
 
             chart.removeAllSeries()
             chosenGraphTest(filteredList(
                 chosenListUnits,
-                sliderStartInCalendar(slider, chosenDay),
-                sliderEndInCalendar(slider, chosenDay)))
+                sliderStartInCalendar(binding.slider, chosenDay),
+                sliderEndInCalendar(binding.slider, chosenDay)))
         }
 
-        buttonStartNext.setOnClickListener {
+        binding.buttonStartNext.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val newStartThumbValue = slider.values[0] + mainViewModel.getStepRange()                          // Новое значение ползунка начала
-            val endThumbValue = slider.values[1]                                            // Значение ползунка конца
+            val newStartThumbValue = binding.slider.values[0] + mainViewModel.getStepRange()                          // Новое значение ползунка начала
+            val endThumbValue = binding.slider.values[1]                                            // Значение ползунка конца
             if (endThumbValue - newStartThumbValue < mainViewModel.getStepRange()) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
             list.add(newStartThumbValue)                                                    // Добавляем в массив с величинами слайдера измененное значение первого ползунка
             list.add(endThumbValue)                                                         // Добавляем в массив с величинами слайдера значение второго ползунка (значение не меняем)
-            slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+            binding.slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
 
             chart.removeAllSeries()
             chosenGraphTest(filteredList(
                 chosenListUnits,
-                sliderStartInCalendar(slider, chosenDay),
-                sliderEndInCalendar(slider, chosenDay)))
+                sliderStartInCalendar(binding.slider, chosenDay),
+                sliderEndInCalendar(binding.slider, chosenDay)))
         }
 
-        buttonEndPrev.setOnClickListener {
+        binding.buttonEndPrev.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val startThumbValue = slider.values[0]                                          // Значение ползунка начала
-            val newEndThumbValue = slider.values[1] - mainViewModel.getStepRange()                            // Новое значение ползунка конца
+            val startThumbValue = binding.slider.values[0]                                          // Значение ползунка начала
+            val newEndThumbValue = binding.slider.values[1] - mainViewModel.getStepRange()                            // Новое значение ползунка конца
             if (newEndThumbValue - startThumbValue < mainViewModel.getStepRange()) return@setOnClickListener  // Проверяем не совместится ли слайдер со вторым, если совместится, то прерываем выполнение
             list.add(startThumbValue)                                                       // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
             list.add(newEndThumbValue)                                                      // Добавляем в массив с величинами слайдера измененное значение второго ползунка
-            slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+            binding.slider.values = list                                                            // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
 
             chart.removeAllSeries()
             chosenGraphTest(filteredList(
                 chosenListUnits,
-                sliderStartInCalendar(slider, chosenDay),
-                sliderEndInCalendar(slider, chosenDay)))
+                sliderStartInCalendar(binding.slider, chosenDay),
+                sliderEndInCalendar(binding.slider, chosenDay)))
         }
 
-        buttonEndNext.setOnClickListener {
+        binding.buttonEndNext.setOnClickListener {
             // Программная установка движков слайдера
             val list = mutableListOf<Float>()
-            val startThumbValue = slider.values[0]                  // Значение ползунка начала
-            val newEndThumbValue = slider.values[1] + mainViewModel.getStepRange()    // Новое значение ползунка конца
+            val startThumbValue = binding.slider.values[0]                  // Значение ползунка начала
+            val newEndThumbValue = binding.slider.values[1] + mainViewModel.getStepRange()    // Новое значение ползунка конца
             if (newEndThumbValue > 24) return@setOnClickListener    // Проверяем не выйдет ли слайдер за максимальное значение, если выйдет, то прерываем выполнение
             list.add(startThumbValue)                               // Добавляем в массив с величинами слайдера значение первого ползунка (значение не меняем)
             list.add(newEndThumbValue)                              // Добавляем в массив с величинами слайдера измененное значение второго ползунка
-            slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
+            binding.slider.values = list                                    // Устанавливаем положение ползунка передавая лист с величинами первого и второго ползунка
 
             chart.removeAllSeries()
             chosenGraphTest(filteredList(
                 chosenListUnits,
-                sliderStartInCalendar(slider, chosenDay),
-                sliderEndInCalendar(slider, chosenDay)))
+                sliderStartInCalendar(binding.slider, chosenDay),
+                sliderEndInCalendar(binding.slider, chosenDay)))
         }
     }
 
@@ -561,7 +568,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("myTag", "Дата ${calendar.time}")
 
             val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            button_date.text = sdf.format(calendar.time)
+            binding.buttonDate.text = sdf.format(calendar.time)
 
             chosenDay = calendar
 
@@ -615,8 +622,8 @@ class MainActivity : AppCompatActivity() {
 
         // Добавление линии нуля сетки графика
         val zeroLine = chart.lineMarker(0).value(0).stroke("0.1 grey")
-        anyChartView.setZoomEnabled(true)
-        anyChartView.setChart(chart)
+        binding.anyChartView.setZoomEnabled(true)
+        binding.anyChartView.setChart(chart)
     }
 
     private fun actionOnService(action: Actions) {
